@@ -34,8 +34,8 @@ function move(dx, dy) {
 }
 
 document.addEventListener('keydown', (e) => {
-  const stepX = (e.shiftKey ? window.innerWidth / 30 : window.innerWidth / 15);
-  const stepY = (e.shiftKey ? window.innerHeight / 30 : window.innerHeight / 15);
+  const stepX = (e.shiftKey ? window.innerWidth / 40 : window.innerWidth / 20);
+  const stepY = (e.shiftKey ? window.innerHeight / 40 : window.innerHeight / 20);
 
   if (e.altKey) {
     switch (e.key) {
@@ -55,6 +55,8 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     return;
   }
+
+  if (e.ctrlKey) return;
 
   switch (e.key) {
     case 'w':
