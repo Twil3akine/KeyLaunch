@@ -1,9 +1,0 @@
-#keyboard-cursor {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: red;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 2147483647;
-}
