@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/chrome": "^0.0.326",
+    "path": "^0.12.7",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

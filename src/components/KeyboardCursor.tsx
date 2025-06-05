@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
+
+
 const KeyboardCursor = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
 
@@ -59,10 +61,10 @@ const KeyboardCursor = () => {
     // キーダウンハンドラ
     const keydownHandler = (e: KeyboardEvent) => {
       const stepX = e.shiftKey
-        ? window.innerWidth / 40
+        ? window.innerWidth / 50
         : window.innerWidth / 20;
       const stepY = e.shiftKey
-        ? window.innerHeight / 40
+        ? window.innerHeight / 50
         : window.innerHeight / 20;
 
       const clientX = position.x + cursorSize / 2;
@@ -98,10 +100,10 @@ const KeyboardCursor = () => {
       if (e.altKey) {
         switch (e.key) {
           case 'h':
-            window.scrollBy(-stepX, 0);
+						chrome.runtime.sendMessage({ action: "goBack" });
             break;
           case 'l':
-            window.scrollBy(stepX, 0);
+						chrome.runtime.sendMessage({ action: "goForward" });
             break;
           case 'j':
             window.scrollBy(0, stepY);
