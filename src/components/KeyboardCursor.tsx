@@ -13,6 +13,11 @@ const KeyboardCursor = () => {
   // フォーカス状態を即座に反映する ref
   const isFocusingRef = useRef(false);
 
+  // コピーモード状態
+  const [isCopyMode, setIsCopyMode] = useState(false);
+  const selectionRef = useRef<Range | null>(null);
+  const anchorNodeRef = useRef<Node | null>(null);
+
   const cursorSize = 10;
   const margin = 20;
 
@@ -70,7 +75,30 @@ const KeyboardCursor = () => {
       const target = document.elementFromPoint(clientX, clientY);
       if (!target) return;
 
-      // 1) Escape でフォーカス解除
+      // Ctrl + Q でコピー（選択）モードを切り替え
+      if (e.ctrlKey && e.key.toLowerCase() === 'q') {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const node = target.childNodes[0] || target;
+        if (node && node instanceof Text) {
+          const range = document.createRange();
+          range.setStart(node, 0);
+          range.setEnd(node, 0);
+
+          const selection = window.getSelection();
+          if (selection) {
+            selection.removeAllRanges();
+            selection.addRange(range);
+            selectionRef.current = range;
+            anchorNodeRef.current = node;
+            setIsCopyMode(true);
+          }
+        }
+        return;
+      }
+
+      // Escape でモード解除
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
@@ -83,8 +111,50 @@ const KeyboardCursor = () => {
         // フォーカスを解除する
         isFocusingRef.current = false;
         setIsFocusing(false);
+        setIsCopyMode(false);
+        selectionRef.current = null;
+        anchorNodeRef.current = null;
         if (cursor) {
           cursor.style.background = 'red';
+        }
+        const sel = window.getSelection();
+        if (sel) sel.removeAllRanges();
+        return;
+      }
+
+      // Copyモード中
+      if (isCopyMode && selectionRef.current && anchorNodeRef.current) {
+        const sel = window.getSelection();
+        const anchor = anchorNodeRef.current;
+        const range = selectionRef.current;
+
+        if (!sel || !anchor || !(anchor instanceof Text)) return;
+
+        let newEnd = range.endOffset;
+
+        // lキー → 右に1文字進める（範囲拡大）
+        if (e.key === 'l') {
+          if (newEnd < anchor.length) newEnd += 1;
+        }
+
+        //hキー → 左に1文字戻す（範囲縮小）
+        if (e.key === 'h') {
+          if (newEnd > 0) newEnd -= 1;
+        }
+
+        const newRange = document.createRange();
+        newRange.setStart(anchor, 0);
+        newRange.setEnd(anchor, newEnd);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+        selectionRef.current = newRange;
+
+        e.preventDefault();
+        e.stopPropagation();
+        
+        //ctrl+cでコピー
+        if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+          document.execCommand('copy');
         }
         return;
       }
@@ -238,7 +308,7 @@ const KeyboardCursor = () => {
         position: 'fixed',
         width: `${cursorSize}px`,
         height: `${cursorSize}px`,
-        background: isFocusing ? 'blue' : 'red',
+        background: isCopyMode ? 'green' : isFocusing ? 'blue' : 'red',
         borderRadius: '50%',
         zIndex: 9999,
         pointerEvents: 'none',
