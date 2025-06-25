@@ -360,7 +360,7 @@ const KeyboardCursor = () => {
         position: 'fixed',
         width: `${cursorSize}px`,
         height: `${cursorSize}px`,
-        background: isCopyMode ? 'green' : isFocusing ? 'blue' : 'red', //仮想ポインタの色制御
+        background: isCopyMode ? 'green' : (isFocusing ? 'blue' : 'red'), //仮想ポインタの色制御
         borderRadius: '50%',
         zIndex: 9999,
         pointerEvents: 'none',
@@ -372,10 +372,10 @@ const KeyboardCursor = () => {
 };
 
 // ノード内のテキストのオフセットを取得する関数（caretRangeFromPoinがあるから関数として独立させるべき）
-function getTextNodeAndOffsetFromPoint(
+const getTextNodeAndOffsetFromPoint = (
   x: number,
   y: number
-): { node: Text; offset: number } | null {
+): { node: Text; offset: number } | null => {
   const range = document.caretRangeFromPoint // ブラウザ上で (x, y) の位置にあるテキスト範囲（Range）を取得
     ? document.caretRangeFromPoint(x, y)
     : (document as any).caretPositionFromPoint?.(x, y); //新しい書き方のフォーバック（代替処理）
@@ -391,7 +391,7 @@ function getTextNodeAndOffsetFromPoint(
 }
 
 //　入力のノードの次のテキストノードを取得(関数にする必要なさそうだけど、)
-function getNextTextNode(node: Node): Text | null {
+const getNextTextNode = (node: Node): Text | null => {
   while (node) {
     if (node.nextSibling) {
       node = node.nextSibling;
@@ -406,7 +406,7 @@ function getNextTextNode(node: Node): Text | null {
 }
 
 // 入力のノードの次のテキストノードを取得
-function getPreviousTextNode(node: Node): Text | null {
+const getPreviousTextNode = (node: Node): Text | null => {
   while (node) {
     if (node.previousSibling) {
       node = node.previousSibling;
@@ -421,7 +421,7 @@ function getPreviousTextNode(node: Node): Text | null {
 }
 
 //階層的にテキストを探索
-function findTextNodeDown(node: Node): Text | null {
+const findTextNodeDown = (node: Node): Text | null => {
   if (node instanceof Text && node.length > 0) return node; // テキストノードなら返す
   for (let child = node.firstChild; child; child = child.nextSibling) {
     const text = findTextNodeDown(child); // 子ノードを再帰探索
@@ -429,8 +429,9 @@ function findTextNodeDown(node: Node): Text | null {
   }
   return null; // 見つからなければnull
 }
+
 //階層的にテキストを逆順に探索
-function findTextNodeUp(node: Node): Text | null {
+const findTextNodeUp = (node: Node): Text | null => {
   if (node instanceof Text && node.length > 0) return node; // テキストノードなら返す
   for (let child = node.lastChild; child; child = child.previousSibling) {
     const text = findTextNodeUp(child); // 子ノードを逆順に再帰探索
