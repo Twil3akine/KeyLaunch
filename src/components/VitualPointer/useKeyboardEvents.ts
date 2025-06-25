@@ -19,6 +19,16 @@ type Handlers = {
  * useKeyboardEvents: document-level の keydown 登録と各種ハンドラ呼び出し
  * positionRef: 最新の position
  * pointerSize: ポインタの大きさ
+ * 
+ * - Alt+C → コピー選択開始
+ * - Escape → フォーカス・コピー解除
+ * - コピー選択中の H/L/Ctrl+C による範囲調整・コピー
+ * - フォーカス中は他操作無効化
+ * - Alt+H/J/K/L でスクロールや履歴
+ * - Ctrl+Space クリック＋フォーカス
+ * - Ctrl+Alt+Space ダブルクリック
+ * - Alt+Space 右クリック
+ * - h/j/k/l でカーソル移動
  */
 export function useKeyboardEvents(
   positionRef: React.MutableRefObject<PointerPosition>,
@@ -33,13 +43,14 @@ export function useKeyboardEvents(
       const clientX = positionRef.current.x + pointerSize / 2;
       const clientY = positionRef.current.y + pointerSize / 2;
 
-      // Ctrl+Q: コピー選択開始
+      // Alt+C: コピー選択開始
       if (e.altKey && e.key.toLowerCase() === 'c') {
         e.preventDefault();
         e.stopPropagation();
         handlers.handleCopyToggle(clientX, clientY);
         return;
       }
+
       // Escape: フォーカス／コピー解除
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -47,27 +58,28 @@ export function useKeyboardEvents(
         handlers.handleCancel();
         return;
       }
-      // Copyモード中の調整
+
+      // コピー選択モード中の範囲調整やコピー(Ctrl+C)
       if (handlers.isCopyMode() && (e.key === 'h' || e.key === 'l' || (e.ctrlKey && e.key.toLowerCase() === 'c'))) {
-        // h/l adjust
         if (e.key === 'l') {
           handlers.handleCopyAdjust('right');
         } else if (e.key === 'h') {
           handlers.handleCopyAdjust('left');
         }
         if (e.ctrlKey && e.key.toLowerCase() === 'c') {
-          // コピー実行: document.execCommand('copy') は startCopy側で既に選択範囲更新されている前提
-          document.execCommand('copy');
+          document.execCommand('copy'); // クリップボードコピー実行
         }
         e.preventDefault();
         e.stopPropagation();
         return;
       }
-      // フォーカス中は他操作を無視
+
+      // フォーカス中は他操作を無効化
       if (handlers.isFocusingRef.current) {
         return;
       }
-      // Alt + hjkl: ページスクロール／履歴操作
+
+      // Alt + hjkl: スクロールや履歴
       if (e.altKey) {
         const handled = handlers.handleScrollOrHistory(e.key, stepY);
         if (handled) {
@@ -76,13 +88,15 @@ export function useKeyboardEvents(
         }
         return;
       }
-      // Ctrl+Space: クリック + フォーカス
+
+      // Ctrl+Space: クリック＋フォーカス
       if (e.code === 'Space' && e.ctrlKey && !e.altKey) {
         e.preventDefault();
         e.stopPropagation();
         handlers.handleClickFocus(clientX, clientY);
         return;
       }
+
       // Ctrl+Alt+Space: ダブルクリック
       if (e.code === 'Space' && e.ctrlKey && e.altKey) {
         e.preventDefault();
@@ -90,6 +104,7 @@ export function useKeyboardEvents(
         handlers.handleDoubleClick(clientX, clientY);
         return;
       }
+
       // Alt+Space: 右クリック
       if (e.code === 'Space' && e.altKey && !e.ctrlKey) {
         e.preventDefault();
@@ -97,7 +112,8 @@ export function useKeyboardEvents(
         handlers.handleContextMenu(clientX, clientY);
         return;
       }
-      // カーソル移動 (h/j/k/l)
+
+      // カーソル移動 h/j/k/l
       const moved = handlers.handleMove(e.key.toLowerCase(), stepX, stepY);
       if (moved) {
         e.preventDefault();
@@ -109,11 +125,5 @@ export function useKeyboardEvents(
     return () => {
       document.removeEventListener('keydown', keydownHandler, true);
     };
-  }, [
-    positionRef,
-    pointerSize,
-    margin,
-    // handlers 内部で useCallback 化している想定なら handlers.* は参照が安定
-    handlers,
-  ]);
+  }, [positionRef, pointerSize, margin, handlers]);
 }
