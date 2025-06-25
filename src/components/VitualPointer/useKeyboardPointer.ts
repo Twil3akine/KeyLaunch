@@ -1,309 +1,151 @@
-// src/components/KeyboardPointer/useKeyboardPointer.ts
-import { useEffect, useRef, useState } from 'react';
-import type { PointerPosition } from '../../types/pointer';
-import {
-  getTextNodeAndOffsetFromPoint,
-  getNextTextNode,
-  getPreviousTextNode,
-} from '../../utils/nodeProcess';
+import { useRef, useState, useCallback } from 'react';
+import type { PointerPosition } from '../../types/KeyboardPointer';
+import { useCopySelection } from './useCopySelection';
+import { useFocusBehavior } from './useFocusBehavior';
+import { usePointerMovement } from './usePointerMovement';
+import { useKeyboardEvents } from './useKeyboardEvents';
+import { dispatchMouseEvent } from '../../utils/domEvents';
 
 type UseKeyboardPointerOptions = {
   pointerSize: number;
   margin: number;
 };
 
-/**
- * useKeyboardPointer フック
- * - 仮想ポインタ位置 (position)
- * - フォーカス状態 (isFocusing)
- * - コピー選択モード (isCopyMode)
- * - キー入力に応じた処理 (移動、クリック、選択拡大縮小 など)
- */
-export function useKeyboardPointer({
-  pointerSize,
-  margin,
-}: UseKeyboardPointerOptions) {
+export function useKeyboardPointer({ pointerSize, margin }: UseKeyboardPointerOptions) {
+  // 1. position state & ref
   const [position, setPosition] = useState<PointerPosition>({
     x: window.innerWidth / 2,
     y: window.innerHeight / 2,
   });
-  const [isFocusing, setIsFocusing] = useState(false);
-  const isFocusingRef = useRef(false);
+  const positionRef = useRef<PointerPosition>(position);
+  // positionRef を最新化
+  const updatePosition = useCallback((pos: PointerPosition) => {
+    positionRef.current = pos;
+    setPosition(pos);
+  }, []);
 
-  const [isCopyMode, setIsCopyMode] = useState(false);
-  const selectionRef = useRef<Range | null>(null);
-  const anchorNodeRef = useRef<Node | null>(null);
-  const anchorOffsetRef = useRef<number>(0);
+  // 2. サブフック: コピー選択
+  const {
+    isCopyMode,
+    startCopy,
+    adjustCopy,
+    cancelCopy,
+  } = useCopySelection();
 
-  // カーソル移動処理
-  const move = (dx: number, dy: number) => {
-    setPosition((prev) => {
-      const newX = Math.max(0, Math.min(window.innerWidth - pointerSize - margin, prev.x + dx));
-      const newY = Math.max(0, Math.min(window.innerHeight - pointerSize - margin, prev.y + dy));
+  // 3. サブフック: フォーカス管理
+  const {
+    isFocusing,
+    isFocusingRef,
+    startFocus,
+    cancelFocus,
+  } = useFocusBehavior();
 
-      const el = document.elementFromPoint(newX + pointerSize / 2, newY + pointerSize / 2);
-      if (el) {
-        el.dispatchEvent(
-          new MouseEvent('mousemove', {
-            clientX: newX + pointerSize / 2,
-            clientY: newY + pointerSize / 2,
-          })
-        );
-      }
+  // 4. サブフック: ポインタ移動
+  const { move } = usePointerMovement(pointerSize, margin, positionRef, updatePosition);
 
-      return { x: newX, y: newY };
+  // 5. handlers をまとめたメモ化関数群
+  const handleCopyToggle = useCallback((clientX: number, clientY: number) => {
+    // startCopy 内で setPosition を呼ぶ際に pointerSize/2 を差し引く処理を一緒に行う
+    startCopy(clientX, clientY, (pos) => {
+      updatePosition({ x: pos.x - pointerSize / 2, y: pos.y - pointerSize / 2 });
     });
-  };
+  }, [startCopy, updatePosition, pointerSize]);
 
-  // キーダウンハンドラ本体
-  const keydownHandler = (e: KeyboardEvent) => {
-    const stepX = e.shiftKey ? window.innerWidth / 50 : window.innerWidth / 20;
-    const stepY = e.shiftKey ? window.innerHeight / 50 : window.innerHeight / 20;
+  const handleCancel = useCallback(() => {
+    cancelFocus();
+    cancelCopy();
+    // ポインタ色等はコンポーネント側で isFocusing/isCopyMode に応じて行う想定
+  }, [cancelFocus, cancelCopy]);
 
-    const clientX = position.x + pointerSize / 2;
-    const clientY = position.y + pointerSize / 2;
+  const handleCopyAdjust = useCallback((direction: 'left' | 'right') => {
+    adjustCopy(direction, (pos) => {
+      updatePosition({ x: pos.x - pointerSize / 2, y: pos.y - pointerSize / 2 });
+    });
+  }, [adjustCopy, updatePosition, pointerSize]);
+
+  const handleScrollOrHistory = useCallback((key: string, stepY: number): boolean => {
+    switch (key) {
+      case 'h':
+        chrome.runtime.sendMessage({ action: 'goBack' });
+        return true;
+      case 'l':
+        chrome.runtime.sendMessage({ action: 'goForward' });
+        return true;
+      case 'j':
+        window.scrollBy(0, stepY);
+        return true;
+      case 'k':
+        window.scrollBy(0, -stepY);
+        return true;
+      default:
+        return false;
+    }
+  }, []);
+
+  const handleClickFocus = useCallback((clientX: number, clientY: number) => {
+    // クリック発行
+    (['mousedown', 'mouseup', 'click'] as const).forEach((type) => {
+      dispatchMouseEvent(type, clientX, clientY);
+    });
+    // フォーカス
     const target = document.elementFromPoint(clientX, clientY);
-    if (!target) return;
-
-    // Ctrl+Q: コピー選択開始／切替
-    if (e.ctrlKey && e.key.toLowerCase() === 'q') {
-      e.preventDefault();
-      e.stopPropagation();
-      const caretInfo = getTextNodeAndOffsetFromPoint(clientX, clientY);
-      if (caretInfo) {
-        const { node, offset } = caretInfo;
-        const range = document.createRange();
-        range.setStart(node, offset);
-        range.setEnd(node, offset);
-        const selection = window.getSelection();
-        if (selection) {
-          selection.removeAllRanges();
-          selection.addRange(range);
-          const rect = range.getBoundingClientRect();
-          setPosition({
-            x: rect.left - pointerSize / 2,
-            y: rect.bottom - pointerSize / 2,
-          });
-          selectionRef.current = range;
-          anchorNodeRef.current = node;
-          anchorOffsetRef.current = offset;
-          setIsCopyMode(true);
-        }
-      }
-      return;
+    if (target) {
+      startFocus(target);
     }
+  }, [startFocus]);
 
-    // Escape: フォーカス／コピー解除
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      e.stopPropagation();
-      const active = document.activeElement;
-      if (active && typeof (active as HTMLElement).blur === 'function') {
-        (active as HTMLElement).blur();
-      }
-      isFocusingRef.current = false;
-      setIsFocusing(false);
-      setIsCopyMode(false);
-      selectionRef.current = null;
-      anchorNodeRef.current = null;
-      if (pointerRef.current) {
-        pointerRef.current.style.background = 'red';
-      }
-      const selectedText = window.getSelection();
-      if (selectedText) selectedText.removeAllRanges();
-      return;
-    }
+  const handleDoubleClick = useCallback((clientX: number, clientY: number) => {
+    dispatchMouseEvent('dblclick', clientX, clientY);
+  }, []);
 
-    // Copy モード中の選択拡大縮小 etc.
-    if (isCopyMode && selectionRef.current && anchorNodeRef.current) {
-      const selectedText = window.getSelection();
-      const anchor = anchorNodeRef.current;
-      const anchorOffset = anchorOffsetRef.current;
-      if (!selectedText || !anchor || !(anchor instanceof Text)) return;
+  const handleContextMenu = useCallback((clientX: number, clientY: number) => {
+    dispatchMouseEvent('contextmenu', clientX, clientY);
+  }, []);
 
-      let currentRange = selectedText.getRangeAt(0);
-      let endNode = currentRange.endContainer;
-      let endOffset = currentRange.endOffset;
-
-      if (e.key === 'l') {
-        if (endNode instanceof Text) {
-          if (endOffset < endNode.length) {
-            endOffset += 1;
-          } else {
-            const nextNode = getNextTextNode(endNode);
-            if (nextNode) {
-              endNode = nextNode;
-              endOffset = 1;
-            }
-          }
-        }
-      }
-      if (e.key === 'h') {
-        if (endNode instanceof Text) {
-          if (endOffset > 0) {
-            endOffset -= 1;
-          } else {
-            const prevNode = getPreviousTextNode(endNode);
-            if (prevNode) {
-              endNode = prevNode;
-              endOffset = prevNode.length - 1;
-            }
-          }
-        }
-      }
-      const newRange = document.createRange();
-      newRange.setStart(anchor, anchorOffset);
-      newRange.setEnd(endNode, endOffset);
-      selectedText.removeAllRanges();
-      selectedText.addRange(newRange);
-      selectionRef.current = newRange;
-
-      const rangeForEnd = document.createRange();
-      rangeForEnd.setStart(endNode, endOffset);
-      rangeForEnd.setEnd(endNode, endOffset);
-      const rect = rangeForEnd.getBoundingClientRect();
-      setPosition({
-        x: rect.left - pointerSize / 2,
-        y: rect.bottom - pointerSize / 2,
-      });
-
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.ctrlKey && e.key.toLowerCase() === 'c') {
-        document.execCommand('copy');
-      }
-      return;
-    }
-
-    // フォーカス中は他操作を無視
-    if (isFocusingRef.current) {
-      return;
-    }
-
-    // Alt + hjkl: ページスクロール／履歴操作
-    if (e.altKey) {
-      switch (e.key) {
-        case 'h':
-          // 履歴戻る
-          chrome.runtime.sendMessage({ action: 'goBack' });
-          break;
-        case 'l':
-          chrome.runtime.sendMessage({ action: 'goForward' });
-          break;
-        case 'j':
-          window.scrollBy(0, stepY);
-          break;
-        case 'k':
-          window.scrollBy(0, -stepY);
-          break;
-        default:
-          return;
-      }
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-
-    // Ctrl+Space: クリック＋フォーカス
-    if (e.code === 'Space' && e.ctrlKey && !e.altKey) {
-      e.preventDefault();
-      e.stopPropagation();
-      ['mousedown', 'mouseup', 'click'].forEach((type) => {
-        target.dispatchEvent(
-          new MouseEvent(type, {
-            bubbles: true,
-            cancelable: true,
-            clientX,
-            clientY,
-            view: window,
-          })
-        );
-      });
-      if (
-        ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) &&
-        target instanceof HTMLElement &&
-        typeof target.focus === 'function' &&
-        !target.hasAttribute('disabled')
-      ) {
-        target.focus({ preventScroll: true });
-        isFocusingRef.current = true;
-        setIsFocusing(true);
-        if (pointerRef.current) {
-          pointerRef.current.style.background = 'blue';
-        }
-      }
-      return;
-    }
-
-    // Ctrl+Alt+Space: ダブルクリック
-    if (e.code === 'Space' && e.ctrlKey && e.altKey) {
-      e.preventDefault();
-      e.stopPropagation();
-      target.dispatchEvent(
-        new MouseEvent('dblclick', {
-          bubbles: true,
-          cancelable: true,
-          clientX,
-          clientY,
-          view: window,
-        })
-      );
-      return;
-    }
-
-    // Alt+Space: 右クリック
-    if (e.code === 'Space' && e.altKey && !e.ctrlKey) {
-      e.preventDefault();
-      e.stopPropagation();
-      target.dispatchEvent(
-        new MouseEvent('contextmenu', {
-          bubbles: true,
-          cancelable: true,
-          clientX,
-          clientY,
-          view: window,
-        })
-      );
-      return;
-    }
-
-    // カーソル移動 (h/j/k/l)
-    switch (e.key.toLowerCase()) {
+  const handleMove = useCallback((key: string, stepX: number, stepY: number): boolean => {
+    switch (key) {
       case 'k':
         move(0, -stepY);
-        break;
+        return true;
       case 'j':
         move(0, stepY);
-        break;
+        return true;
       case 'h':
         move(-stepX, 0);
-        break;
+        return true;
       case 'l':
         move(stepX, 0);
-        break;
+        return true;
       default:
-        return;
+        return false;
     }
-    e.preventDefault();
-    e.stopPropagation();
-  };
+  }, [move]);
 
-  // pointerRef を参照するために useRef だけ上位で確保
-  const pointerRef = useRef<HTMLDivElement>(null);
+  // 6. キーイベント登録: サブフック useKeyboardEvents でまとめて document.addEventListener する
+  useKeyboardEvents(positionRef, pointerSize, margin, {
+    handleCopyToggle,
+    handleCancel,
+    handleCopyAdjust,
+    isCopyMode: () => isCopyMode,
+    isFocusingRef,
+    handleScrollOrHistory,
+    handleClickFocus,
+    handleDoubleClick,
+    handleContextMenu,
+    handleMove,
+  });
 
-  useEffect(() => {
-    const handler = keydownHandler;
-    document.addEventListener('keydown', handler, true);
-    return () => {
-      document.removeEventListener('keydown', handler, true);
-    };
-    // position などをクロージャで参照する。必要に応じて position を依存に含める。
-  }, [position, isCopyMode, isFocusing]); // 状態変化を反映するために依存に含む
-
+  // 返り値
   return {
-    pointerRef,
+    pointerRef: null as unknown as React.RefObject<HTMLDivElement>, // コンポーネント側で ref を生成する場合は調整可能
+    // pointerRef は実際コンポーネント側で useRef<HTMLDivElement> を作り、この hook から返すように変更できます
     position,
     isFocusing,
     isCopyMode,
+    // pointerRef の扱いを揃える場合:
+    getPointerRef: () => {
+      // 呼び出し側で useRef<HTMLDivElement> を作る場合はここを使って返す設計に
+      return null;
+    },
   };
 }

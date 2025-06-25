@@ -1,2 +1,3 @@
-export { default as VirtualPointer } from './VirtualPointer';
-export type { PointerPosition } from '../../types/pointer';
+// src/components/KeyboardPointer/index.ts
+export { useKeyboardPointer } from './useKeyboardPointer';
+export type { PointerPosition } from '../../types/KeyboardPointer';
