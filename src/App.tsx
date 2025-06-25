@@ -1,9 +1,9 @@
-import KeyboardCursor from "./components/KeyboardCursor";
+import KeyboardPointer from "./components/VitualPointer/VirtualPointer";
 
 const App = () => {
   return (
     <>
-      <KeyboardCursor />
+      <KeyboardPointer />
     </>
   );
 }
