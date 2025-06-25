@@ -1,4 +1,8 @@
-// ノード内のテキストのオフセットを取得する関数（caretRangeFromPoinがあるから関数として独立させるべき）
+/**
+ * 仮想ポインタ位置 (clientX, clientY) の座標から、
+ * テキストノードとそのオフセットを取得する。
+ * 戻り値が null の場合はテキストノードが見つからなかったケース。
+ */
 export const getTextNodeAndOffsetFromPoint = (
   x: number,
   y: number
@@ -17,7 +21,9 @@ export const getTextNodeAndOffsetFromPoint = (
   return null;
 }
 
-//　入力のノードの次のテキストノードを取得(関数にする必要なさそうだけど、)
+/**
+ * 現在のテキストノードから次のテキストノードを取得する。
+ */
 export const getNextTextNode = (node: Node): Text | null => {
   while (node) {
     if (node.nextSibling) {
@@ -32,7 +38,9 @@ export const getNextTextNode = (node: Node): Text | null => {
   return null; // 見つからなければ null を返す
 }
 
-// 入力のノードの次のテキストノードを取得
+/**
+ * 現在のテキストノードから前のテキストノードを取得する。
+ */
 export const getPreviousTextNode = (node: Node): Text | null => {
   while (node) {
     if (node.previousSibling) {
@@ -47,8 +55,10 @@ export const getPreviousTextNode = (node: Node): Text | null => {
   return null; // 見つからなければnullを返す
 }
 
-//階層的にテキストを探索
-export const findTextNodeDown = (node: Node): Text | null => {
+/*
+ * 階層的にテキストを探索
+ */
+const findTextNodeDown = (node: Node): Text | null => {
   if (node instanceof Text && node.length > 0) return node; // テキストノードなら返す
   for (let child = node.firstChild; child; child = child.nextSibling) {
     const text = findTextNodeDown(child); // 子ノードを再帰探索
@@ -57,8 +67,10 @@ export const findTextNodeDown = (node: Node): Text | null => {
   return null; // 見つからなければnull
 }
 
-//階層的にテキストを逆順に探索
-export const findTextNodeUp = (node: Node): Text | null => {
+/*
+ * 階層的にテキストを逆順に探索
+ */
+const findTextNodeUp = (node: Node): Text | null => {
   if (node instanceof Text && node.length > 0) return node; // テキストノードなら返す
   for (let child = node.lastChild; child; child = child.previousSibling) {
     const text = findTextNodeUp(child); // 子ノードを逆順に再帰探索
