@@ -1,3 +1,5 @@
+/// <reference types="chrome" />
+
 import { useRef, useState, useCallback } from 'react';
 import type { PointerPosition } from '../../types/KeyboardPointer';
 import { useCopySelection } from './useCopySelection';
@@ -11,20 +13,26 @@ type UseKeyboardPointerOptions = {
   margin: number;
 };
 
+/**
+ * useKeyboardPointer: 仮想ポインタの状態管理・キーボード操作統合フック
+ * - ポインタ位置、コピー選択モード、フォーカスモードの管理
+ * - 各種キーボード操作に応じてポインタ移動、選択、クリック、ダブルクリック、右クリックなどを制御
+ */
 export function useKeyboardPointer({ pointerSize, margin }: UseKeyboardPointerOptions) {
   // 1. position state & ref
+  // 画面中央に初期配置
   const [position, setPosition] = useState<PointerPosition>({
     x: window.innerWidth / 2,
     y: window.innerHeight / 2,
   });
   const positionRef = useRef<PointerPosition>(position);
-  // positionRef を最新化
+  // positionRef を最新化するための関数
   const updatePosition = useCallback((pos: PointerPosition) => {
     positionRef.current = pos;
     setPosition(pos);
   }, []);
 
-  // 2. サブフック: コピー選択
+  // 2. コピー選択用のサブフック
   const {
     isCopyMode,
     startCopy,
@@ -32,7 +40,7 @@ export function useKeyboardPointer({ pointerSize, margin }: UseKeyboardPointerOp
     cancelCopy,
   } = useCopySelection();
 
-  // 3. サブフック: フォーカス管理
+  // 3. フォーカス管理用のサブフック
   const {
     isFocusing,
     isFocusingRef,
@@ -40,29 +48,44 @@ export function useKeyboardPointer({ pointerSize, margin }: UseKeyboardPointerOp
     cancelFocus,
   } = useFocusBehavior();
 
-  // 4. サブフック: ポインタ移動
+  // 4. ポインタ移動用のサブフック
   const { move } = usePointerMovement(pointerSize, margin, positionRef, updatePosition);
 
-  // 5. handlers をまとめたメモ化関数群
+  // 5. 各種ハンドラ群を useCallback でメモ化
+
+  /**
+   * コピー選択開始 (Alt+C キーに対応)
+   * startCopy は選択範囲開始とポインタ位置の更新を行う
+   * ポインタ位置は選択範囲の文字の左下に合わせる（pointerSize/2 を差し引く）
+   */
   const handleCopyToggle = useCallback((clientX: number, clientY: number) => {
-    // startCopy 内で setPosition を呼ぶ際に pointerSize/2 を差し引く処理を一緒に行う
     startCopy(clientX, clientY, (pos) => {
       updatePosition({ x: pos.x - pointerSize / 2, y: pos.y - pointerSize / 2 });
     });
   }, [startCopy, updatePosition, pointerSize]);
 
+  /**
+   * フォーカス・コピー状態解除（Escapeなどで呼び出し）
+   */
   const handleCancel = useCallback(() => {
     cancelFocus();
     cancelCopy();
-    // ポインタ色等はコンポーネント側で isFocusing/isCopyMode に応じて行う想定
+    // isFocusing / isCopyMode の状態に応じてコンポーネント側でポインタ色変更など対応予定
   }, [cancelFocus, cancelCopy]);
 
+  /**
+   * コピー選択範囲の左右調整（H/Lキー）
+   * 選択範囲の終端を拡大・縮小し、ポインタ位置も更新
+   */
   const handleCopyAdjust = useCallback((direction: 'left' | 'right') => {
     adjustCopy(direction, (pos) => {
       updatePosition({ x: pos.x - pointerSize / 2, y: pos.y - pointerSize / 2 });
     });
   }, [adjustCopy, updatePosition, pointerSize]);
 
+  /**
+   * Alt+H/L/J/K キーでのページスクロールや履歴移動（Chrome拡張のメッセージ送信）
+   */
   const handleScrollOrHistory = useCallback((key: string, stepY: number): boolean => {
     switch (key) {
       case 'h':
@@ -82,26 +105,37 @@ export function useKeyboardPointer({ pointerSize, margin }: UseKeyboardPointerOp
     }
   }, []);
 
+  /**
+   * Ctrl+Space でのクリック + フォーカス処理
+   * 仮想ポインタ位置でマウスイベントを発火し、フォーカス可能ならフォーカス開始
+   */
   const handleClickFocus = useCallback((clientX: number, clientY: number) => {
-    // クリック発行
     (['mousedown', 'mouseup', 'click'] as const).forEach((type) => {
       dispatchMouseEvent(type, clientX, clientY);
     });
-    // フォーカス
     const target = document.elementFromPoint(clientX, clientY);
     if (target) {
       startFocus(target);
     }
   }, [startFocus]);
 
+  /**
+   * Ctrl+Alt+Space でのダブルクリック処理
+   */
   const handleDoubleClick = useCallback((clientX: number, clientY: number) => {
     dispatchMouseEvent('dblclick', clientX, clientY);
   }, []);
 
+  /**
+   * Alt+Space での右クリック処理
+   */
   const handleContextMenu = useCallback((clientX: number, clientY: number) => {
     dispatchMouseEvent('contextmenu', clientX, clientY);
   }, []);
 
+  /**
+   * h/j/k/l キーによる仮想ポインタ移動
+   */
   const handleMove = useCallback((key: string, stepX: number, stepY: number): boolean => {
     switch (key) {
       case 'k':
@@ -121,7 +155,7 @@ export function useKeyboardPointer({ pointerSize, margin }: UseKeyboardPointerOp
     }
   }, [move]);
 
-  // 6. キーイベント登録: サブフック useKeyboardEvents でまとめて document.addEventListener する
+  // 6. キーボードイベント登録
   useKeyboardEvents(positionRef, pointerSize, margin, {
     handleCopyToggle,
     handleCancel,
@@ -135,17 +169,11 @@ export function useKeyboardPointer({ pointerSize, margin }: UseKeyboardPointerOp
     handleMove,
   });
 
-  // 返り値
   return {
-    pointerRef: null as unknown as React.RefObject<HTMLDivElement>, // コンポーネント側で ref を生成する場合は調整可能
-    // pointerRef は実際コンポーネント側で useRef<HTMLDivElement> を作り、この hook から返すように変更できます
+    pointerRef: null as unknown as React.RefObject<HTMLDivElement>, // 実装時に ref を渡す場合は変更
     position,
     isFocusing,
     isCopyMode,
-    // pointerRef の扱いを揃える場合:
-    getPointerRef: () => {
-      // 呼び出し側で useRef<HTMLDivElement> を作る場合はここを使って返す設計に
-      return null;
-    },
+    getPointerRef: () => null,
   };
 }

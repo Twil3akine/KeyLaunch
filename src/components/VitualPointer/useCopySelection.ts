@@ -12,6 +12,11 @@ type UseCopySelectionReturn = {
   cancelCopy: () => void;
 };
 
+/**
+ * useCopySelection: コピー選択範囲管理フック
+ * - コピー選択の開始、範囲拡大・縮小、解除を行う
+ * - ポインタの座標は選択範囲の端（文字の左下）に合わせて更新
+ */
 export function useCopySelection(): UseCopySelectionReturn {
   const selectionRef = useRef<Range | null>(null);
   const anchorNodeRef = useRef<Text | null>(null);
@@ -19,7 +24,9 @@ export function useCopySelection(): UseCopySelectionReturn {
   const [isCopyMode, setIsCopyMode] = useState(false);
 
   /**
-   * コピー選択開始 (Ctrl+Q)
+   * コピー選択開始 (Alt+C)
+   * clientX, clientY の位置のテキストノードとオフセットを取得し
+   * 範囲を初期化。ポインタも範囲開始位置に移動。
    */
   const startCopy = (
     clientX: number,
@@ -29,7 +36,6 @@ export function useCopySelection(): UseCopySelectionReturn {
     const caretInfo = getTextNodeAndOffsetFromPoint(clientX, clientY);
     if (!caretInfo) return;
     const { node, offset } = caretInfo;
-    // Range 初期化
     const range = document.createRange();
     range.setStart(node, offset);
     range.setEnd(node, offset);
@@ -38,8 +44,7 @@ export function useCopySelection(): UseCopySelectionReturn {
     selection.removeAllRanges();
     selection.addRange(range);
     const rect = range.getBoundingClientRect();
-    // ポインタ移動用コールバックを呼ぶ
-    setPosition({ x: rect.left - /* pointerSize/2 は呼び出し側で調整 */ 0, y: rect.bottom - /* pointerSize/2 */ 0 });
+    setPosition({ x: rect.left, y: rect.bottom });
     selectionRef.current = range;
     anchorNodeRef.current = node;
     anchorOffsetRef.current = offset;
@@ -47,7 +52,9 @@ export function useCopySelection(): UseCopySelectionReturn {
   };
 
   /**
-   * コピー範囲を拡大/縮小 (h/l)
+   * コピー範囲を左右に調整 (h/l)
+   * 範囲終端のテキストノードとオフセットを更新し、範囲再設定
+   * ポインタ位置も末尾に合わせて更新
    */
   const adjustCopy = (
     direction: 'left' | 'right',
@@ -88,23 +95,24 @@ export function useCopySelection(): UseCopySelectionReturn {
         }
       }
     }
-    // Range 更新
+
     const newRange = document.createRange();
     newRange.setStart(anchor, anchorOffset);
     newRange.setEnd(endNode, endOffset);
     selection.removeAllRanges();
     selection.addRange(newRange);
     selectionRef.current = newRange;
-    // ポインタ移動
+
     const rangeForEnd = document.createRange();
     rangeForEnd.setStart(endNode, endOffset);
     rangeForEnd.setEnd(endNode, endOffset);
     const rect = rangeForEnd.getBoundingClientRect();
-    setPosition({ x: rect.left - /* pointerSize/2 */ 0, y: rect.bottom - /* pointerSize/2 */ 0 });
+    setPosition({ x: rect.left, y: rect.bottom });
   };
 
   /**
    * コピー選択解除 (Escape 等)
+   * 選択範囲をクリアし、状態をリセットする
    */
   const cancelCopy = () => {
     const sel = window.getSelection();

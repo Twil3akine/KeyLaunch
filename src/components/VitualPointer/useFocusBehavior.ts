@@ -1,35 +1,46 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback } from 'react';
 
 /**
- * useFocusBehavior: フォーカス管理ロジック
+ * useFocusBehavior: フォーカス状態管理フック
+ * - isFocusing: React state で色の再レンダー用
+ * - isFocusingRef: イベント処理やDOM操作で即時参照用の ref
+ * 
+ * startFocus: フォーカス対象の HTMLElement に .focus() して状態を更新
+ * cancelFocus: フォーカス解除し状態リセット
  */
 export function useFocusBehavior() {
-  const isFocusingRef = useRef(false);
   const [isFocusing, setIsFocusing] = useState(false);
+  const isFocusingRef = useRef(false);
 
   /**
-   * フォーカス開始 (呼び出し側でクリック発行済みと想定)
+   * 指定した要素にフォーカスをセットし、状態を管理
+   * フォーカス中は仮想ポインタの色を変えるなどのUI反映を想定
    */
-  const startFocus = (target: Element) => {
-    if (!(target instanceof HTMLElement)) return;
-    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) && typeof target.focus === 'function' && !target.hasAttribute('disabled')) {
+  const startFocus = useCallback((target: Element) => {
+    if (
+      ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) &&
+      target instanceof HTMLElement &&
+      typeof target.focus === 'function' &&
+      !target.hasAttribute('disabled')
+    ) {
       target.focus({ preventScroll: true });
       isFocusingRef.current = true;
       setIsFocusing(true);
     }
-  };
+  }, []);
 
   /**
-   * フォーカス解除
+   * フォーカス状態を解除し、状態をリセットする
+   * 仮想ポインタの色も元に戻すなどの処理を想定
    */
-  const cancelFocus = () => {
+  const cancelFocus = useCallback(() => {
     const active = document.activeElement;
     if (active && typeof (active as HTMLElement).blur === 'function') {
       (active as HTMLElement).blur();
     }
     isFocusingRef.current = false;
     setIsFocusing(false);
-  };
+  }, []);
 
   return {
     isFocusing,
