@@ -59,6 +59,7 @@ export function useKeyboardPointer({ pointerSize, margin }: UseKeyboardPointerOp
    * ポインタ位置は選択範囲の文字の左下に合わせる（pointerSize/2 を差し引く）
    */
   const handleCopyToggle = useCallback((clientX: number, clientY: number) => {
+    // startCopy 内で setPosition を呼ぶ際に pointerSize/2 を差し引く処理を一緒に行う
     startCopy(clientX, clientY, (pos) => {
       updatePosition({ x: pos.x - pointerSize / 2, y: pos.y - pointerSize / 2 });
     });
@@ -110,9 +111,11 @@ export function useKeyboardPointer({ pointerSize, margin }: UseKeyboardPointerOp
    * 仮想ポインタ位置でマウスイベントを発火し、フォーカス可能ならフォーカス開始
    */
   const handleClickFocus = useCallback((clientX: number, clientY: number) => {
+    // クリック発行
     (['mousedown', 'mouseup', 'click'] as const).forEach((type) => {
       dispatchMouseEvent(type, clientX, clientY);
     });
+    // フォーカス
     const target = document.elementFromPoint(clientX, clientY);
     if (target) {
       startFocus(target);
@@ -174,6 +177,8 @@ export function useKeyboardPointer({ pointerSize, margin }: UseKeyboardPointerOp
     position,
     isFocusing,
     isCopyMode,
-    getPointerRef: () => null,
+    getPointerRef: () => {//外部から pointerRef にアクセスさせたい場合に使う関数
+      return null;
+    },
   };
 }

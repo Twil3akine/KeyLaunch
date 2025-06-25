@@ -36,6 +36,7 @@ export function useCopySelection(): UseCopySelectionReturn {
     const caretInfo = getTextNodeAndOffsetFromPoint(clientX, clientY);
     if (!caretInfo) return;
     const { node, offset } = caretInfo;
+    // Range 初期化
     const range = document.createRange();
     range.setStart(node, offset);
     range.setEnd(node, offset);
@@ -44,7 +45,7 @@ export function useCopySelection(): UseCopySelectionReturn {
     selection.removeAllRanges();
     selection.addRange(range);
     const rect = range.getBoundingClientRect();
-    setPosition({ x: rect.left, y: rect.bottom });
+    setPosition({ x: rect.left, y: rect.bottom }); // - pointerSize/2 の調整は呼び出し側で行う
     selectionRef.current = range;
     anchorNodeRef.current = node;
     anchorOffsetRef.current = offset;
@@ -95,19 +96,19 @@ export function useCopySelection(): UseCopySelectionReturn {
         }
       }
     }
-
+    // Range 更新
     const newRange = document.createRange();
     newRange.setStart(anchor, anchorOffset);
     newRange.setEnd(endNode, endOffset);
     selection.removeAllRanges();
     selection.addRange(newRange);
     selectionRef.current = newRange;
-
+    // ポインタの移動
     const rangeForEnd = document.createRange();
     rangeForEnd.setStart(endNode, endOffset);
     rangeForEnd.setEnd(endNode, endOffset);
     const rect = rangeForEnd.getBoundingClientRect();
-    setPosition({ x: rect.left, y: rect.bottom });
+    setPosition({ x: rect.left, y: rect.bottom }); // - pointerSize/2 の調整は呼び出し側で行う
   };
 
   /**
