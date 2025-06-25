@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
+
+
 const KeyboardCursor = () => {
   // 仮想ポインタの生成
   const cursorRef = useRef<HTMLDivElement>(null); 
@@ -218,10 +220,10 @@ const KeyboardCursor = () => {
       if (e.altKey) {
         switch (e.key) {
           case 'h':
-            window.scrollBy(-stepX, 0); // Alt+h で横スクロール左へ
+						chrome.runtime.sendMessage({ action: "goBack" });
             break;
           case 'l':
-            window.scrollBy(stepX, 0); // Alt+l で横スクロール右へ
+						chrome.runtime.sendMessage({ action: "goForward" });
             break;
           case 'j':
             window.scrollBy(0, stepY); // Alt+j で縦スクロール下へ
