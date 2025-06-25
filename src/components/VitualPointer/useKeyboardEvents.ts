@@ -34,7 +34,7 @@ export function useKeyboardEvents(
       const clientY = positionRef.current.y + pointerSize / 2;
 
       // Ctrl+Q: コピー選択開始
-      if (e.ctrlKey && e.key.toLowerCase() === 'q') {
+      if (e.altKey && e.key.toLowerCase() === 'c') {
         e.preventDefault();
         e.stopPropagation();
         handlers.handleCopyToggle(clientX, clientY);
