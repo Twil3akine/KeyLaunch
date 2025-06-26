@@ -71,7 +71,7 @@ export function useKeyboardPointer({ pointerSize, margin }: UseKeyboardPointerOp
   const handleCancel = useCallback(() => {
     cancelFocus();
     cancelCopy();
-    // isFocusing / isCopyMode の状態に応じてコンポーネント側でポインタ色変更など対応予定
+    // isFocusing / isCopyMode の状態に応じてコンポーネント側でポインタ色変更など対応
   }, [cancelFocus, cancelCopy]);
 
   /**
