@@ -12,7 +12,7 @@ import {
 type UseCopySelectionReturn = {
   isCopyMode: boolean;
   //startCopy: (clientX: number, clientY: number, setPosition: (pos: PointerPosition) => void) => void;
-  startCopy: (clientX: number, clientY: number, onSelected: (pos: { x: number; y: number }) => void) => void;
+  startCopy: (clientX: number, clientY: number, onSelected: (pos: { x: number; y: number }) => void) => void; //onSelectedは選択した文字の座標について、呼び出し側で処理を決めれるコールバック関数(startCopyの要素)
   adjustCopy: (
     direction: 'left' | 'right',
     //setPosition: (pos: PointerPosition) => void
@@ -32,7 +32,7 @@ export function useCopySelection(): UseCopySelectionReturn {
   const anchorOffsetRef = useRef<number>(0);*/
   const [isCopyMode, setIsCopyMode] = useState(false);
   const selection = window.getSelection();
-  // 開始・終了のindex管理 ★
+  // 開始・終了のindex管理
   const startIndexRef = useRef<number | null>(null);
   const endIndexRef = useRef<number | null>(null);
 
@@ -42,10 +42,10 @@ export function useCopySelection(): UseCopySelectionReturn {
    * 範囲を初期化。ポインタも範囲開始位置に移動。
    */
     /**
-   * コピーモード開始（body文字単位の範囲選択へ変更★）
+   * コピーモード開始（bodyの文字単位の範囲選択）
    *  @param clientX 仮想ポインタのX座標
    *  @param clientY 仮想ポインタのY座標
-   *  @param onSelected 選択完了時のコールバック（座標受け渡し用）
+   *  @param onSelected 選択完了時のコールバック（選択文字の座標受け渡し用）
    */
   const startCopy = (
     clientX: number,
@@ -71,21 +71,23 @@ export function useCopySelection(): UseCopySelectionReturn {
     anchorOffsetRef.current = offset;
     setIsCopyMode(true);*/
 
-    // 新設計：nearestからRange取得★
+    // nearestからRange取得
     const nearest = getNearestCharRange(clientX, clientY);
-    if (!nearest) return;//nearestNullの場合は
-    const range = nearest.range.cloneRange();
+    if (!nearest) return; //nearestがNullの場合は処理を止めて範囲を動かさずに止める
+    const range = nearest.range.cloneRange(); //nearestのrangeを複製
 
     // 選択範囲設定
-    selection?.removeAllRanges();
-    selection?.addRange(range);
+    if (selection) {
+      selection.removeAllRanges();
+      selection.addRange(range); 
+    }
     setIsCopyMode(true);
 
-    // インデックス記憶★
+    // インデックス記憶
     startIndexRef.current = getCharRangeIndex(range);
     endIndexRef.current = startIndexRef.current;
 
-    // 選択矩形座標取得（UI調整用）★
+    // 選択矩形座標取得（UI調整用）
     const rect = range.getBoundingClientRect();
     onSelected({ x: rect.left, y: rect.bottom });// - pointerSize/2 の調整は呼び出し側で行う
   };
@@ -95,9 +97,9 @@ export function useCopySelection(): UseCopySelectionReturn {
    * 範囲終端のテキストノードとオフセットを更新し、範囲再設定
    * ポインタ位置も末尾に合わせて更新
    */
-  /**★
+  /**
    * @param direction 'left' or 'right'
-   * @param onUpdate 選択更新時のコールバック
+   * @param onUpdate 選択更新時のコールバック（更新時の文字の座標選択）
    */
   const adjustCopy = (
     direction: 'left' | 'right',
@@ -141,7 +143,7 @@ export function useCopySelection(): UseCopySelectionReturn {
       }
     }*/
 
-    // 新規index計算★
+    // 選択範囲の一番後ろの文字の配列番号（index）計算
     let newEnd = endIndexRef.current + (direction === 'right' ? 1 : -1);   
 
     // Range 更新
@@ -163,7 +165,7 @@ export function useCopySelection(): UseCopySelectionReturn {
     const startRange = getCharRangeAtOffset(startIndexRef.current);
     if (!newRange || !startRange) return; // 範囲外なら処理を止めて範囲を動かさずに止める
 
-    // 範囲の構築（開始位置よりも後ろか前かで開始・終了を逆転させる）★
+    // 範囲の構築（開始位置よりも後ろか前かで開始・終了を逆転させる）
     const range = document.createRange();
     if (newEnd > startIndexRef.current) {
       range.setStart(startRange.range.startContainer, startRange.range.startOffset);
@@ -173,9 +175,11 @@ export function useCopySelection(): UseCopySelectionReturn {
       range.setEnd(startRange.range.endContainer, startRange.range.endOffset);
     }
 
-    // 選択更新★
-    selection?.removeAllRanges();
-    selection?.addRange(range);
+    // 選択範囲の更新
+    if (selection) {
+      selection.removeAllRanges();
+      selection.addRange(range); 
+    }
 
     endIndexRef.current = newEnd;
 
@@ -193,7 +197,7 @@ export function useCopySelection(): UseCopySelectionReturn {
     selectionRef.current = null;
     anchorNodeRef.current = null;
     anchorOffsetRef.current = 0;*/
-    window.getSelection()?.removeAllRanges(); //ほぼ上の2行と同じ意味
+    window.getSelection()?.removeAllRanges(); //ほぼ真上のコメントアウト上の2行と同じ意味
     setIsCopyMode(false);
     startIndexRef.current = null;
     endIndexRef.current = null;

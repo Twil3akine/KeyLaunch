@@ -1,4 +1,4 @@
-export type CharRange = {
+export type CharRange = { //1文字ごとの位置情報付きデータ構造
   range: Range;
   text: string;
   rect: DOMRect;
@@ -13,10 +13,10 @@ let isMapBuilt = false;
 export const buildCharRangeMap = () => {
   charRanges = [];
 
-  const walker = document.createTreeWalker(//★
-    document.body,
-    NodeFilter.SHOW_TEXT,
-    null
+  const walker = document.createTreeWalker( //DOMを順番にたどるためのウォーカーを作る関数
+    document.body, //ここから下のすべてを対象にする（bodyの中にあるすべての要素、ノードをたどる）
+    NodeFilter.SHOW_TEXT, //テキストノードのみを対象（HTML要素（<div>など）は無視して、その中の「文字だけ」を対象）
+    null //もう一つノードフィルターをかけれるが今夏は不要なのでnull
   );
 
   while (walker.nextNode()) {
@@ -97,12 +97,12 @@ export const getNearestCharRange = (x: number, y: number): CharRange | null => {
  * 指定インデックスの文字範囲を取得
  */
 export const getCharRangeAtOffset = (index: number): CharRange | null => {
-  if (index < 0 || index >= charRanges.length) return null;
-  return charRanges[index];
+  if (index < 0 || index >= charRanges.length) return null; //無効な範囲ならnullを返す
+  return charRanges[index]; //対象番号のCharRange（文字の範囲情報）を返す
 };
 
 /**
- * 指定Rangeの開始位置に対応するcharRangesのインデックスを返す
+ * 指定Range（選択範囲）の『開始位置』に対応するcharRangesの（全体の範囲に対する）インデックスを返す
  */
 export const getCharRangeIndex = (target: Range): number => {
   for (let i = 0; i < charRanges.length; i++) {
@@ -114,5 +114,6 @@ export const getCharRangeIndex = (target: Range): number => {
       return i;
     }
   }
-  return -1;
+  return -1; //該当の文字がなければ-1を返し、無いことを示す
+  //-1を返すと、getCharRangeAtOffsetにおいてnullが返り、それを判定して処理を止める
 };
