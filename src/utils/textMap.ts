@@ -16,7 +16,7 @@ export const buildCharRangeMap = () => {
   const walker = document.createTreeWalker( //DOMを順番にたどるためのウォーカーを作る関数
     document.body, //ここから下のすべてを対象にする（bodyの中にあるすべての要素、ノードをたどる）
     NodeFilter.SHOW_TEXT, //テキストノードのみを対象（HTML要素（<div>など）は無視して、その中の「文字だけ」を対象）
-    null //もう一つノードフィルターをかけれるが今夏は不要なのでnull
+    null //もう一つノードフィルターをかけれるが今回は不要なのでnull
   );
 
   while (walker.nextNode()) {
