@@ -17,4 +17,11 @@ chrome.commands.onCommand.addListener((command) => {
   if (command === "forward-action") {
     chrome.tabs.goForward();
   }
+
+  if (command === "toggle-bookmark-manager") {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (!tabs[0]?.id) return;
+      chrome.tabs.sendMessage(tabs[0].id, { action: "toggleBookmarkManager" });
+    });
+  }
 });

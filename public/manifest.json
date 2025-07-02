@@ -24,7 +24,13 @@
         "default": "Alt+L"
       },
       "description": "Forward like browser forward"
+    },
+    "toggle-bookmark-manager": {
+      "suggested_key": {
+        "default": "Ctrl+Q",
+        "mac": "Command+Q"
+      },
+      "description": "Toggle bookmark manager panel"
     }
   }
-
 }
