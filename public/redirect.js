@@ -1,0 +1,1 @@
+window.location.href = "https://www.google.com/?hl=ja&authuser=0";
