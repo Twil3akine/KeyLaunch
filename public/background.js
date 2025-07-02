@@ -12,3 +12,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
   }
 });
+
+chrome.commands.onCommand.addListener((command) => {
+  if (command === "forward-action") {
+    chrome.tabs.goForward();
+  }
+});

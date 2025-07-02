@@ -17,5 +17,14 @@
       "run_at": "document_idle"
     }
   ],
-  "host_permissions": ["<all_urls>"]
+  "host_permissions": ["<all_urls>"],
+  "commands": {
+    "forward-action": {
+      "suggested_key": {
+        "default": "Alt+L"
+      },
+      "description": "Forward like browser forward"
+    }
+  }
+
 }
