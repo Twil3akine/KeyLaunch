@@ -23,8 +23,16 @@
       "matches": ["<all_urls>"]
     }
   ],
-  "host_permissions": ["<all_urls>"],
   "chrome_url_overrides": {
     "newtab": "newtab.html"
+  }
+  "host_permissions": ["<all_urls>"],
+  "commands": {
+    "forward-action": {
+      "suggested_key": {
+        "default": "Alt+L"
+      },
+      "description": "Forward like browser forward"
+    }
   }
 }
