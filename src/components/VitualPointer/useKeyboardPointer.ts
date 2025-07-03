@@ -86,23 +86,46 @@ export function useKeyboardPointer({ pointerSize, margin }: UseKeyboardPointerOp
 
   /**
    * Alt+H/L/J/K キーでのページスクロールや履歴移動（Chrome拡張のメッセージ送信）
+   * chrome://newtab など chrome API が使えない場合は window.history でフォールバック
    */
   const handleScrollOrHistory = useCallback((key: string, stepY: number): boolean => {
-    switch (key) {
-      case 'h':
-        chrome.runtime.sendMessage({ action: 'goBack' });
+    try {
+      if (key === 'h') {
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+          chrome.runtime.sendMessage({ action: 'goBack' });
+        } else {
+          window.history.back();
+        }
         return true;
-      case 'l':
-        chrome.runtime.sendMessage({ action: 'goForward' });
+      }
+      if (key === 'l') {
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+          chrome.runtime.sendMessage({ action: 'goForward' });
+        } else {
+          window.history.forward();
+        }
         return true;
-      case 'j':
+      }
+      if (key === 'j') {
         window.scrollBy(0, stepY);
         return true;
-      case 'k':
+      }
+      if (key === 'k') {
         window.scrollBy(0, -stepY);
         return true;
-      default:
-        return false;
+      }
+      return false;
+    } catch (e) {
+      // chrome API で例外が出た場合もフォールバック
+      if (key === 'h') {
+        window.history.back();
+        return true;
+      }
+      if (key === 'l') {
+        window.history.forward();
+        return true;
+      }
+      return false;
     }
   }, []);
 

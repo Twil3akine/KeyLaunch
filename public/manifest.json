@@ -17,6 +17,15 @@
       "run_at": "document_idle"
     }
   ],
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/main.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  }
   "host_permissions": ["<all_urls>"],
   "commands": {
     "forward-action": {
@@ -26,5 +35,4 @@
       "description": "Forward like browser forward"
     }
   }
-
 }
