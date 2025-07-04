@@ -113,6 +113,8 @@ export function useKeyboardEvents(
         return;
       }
 
+      if (e.ctrlKey) return;
+
       // カーソル移動 h/j/k/l
       const moved = handlers.handleMove(e.key.toLowerCase(), stepX, stepY);
       if (moved) {
