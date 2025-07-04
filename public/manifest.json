@@ -25,7 +25,7 @@
   ],
   "chrome_url_overrides": {
     "newtab": "newtab.html"
-  }
+  },
   "host_permissions": ["<all_urls>"],
   "commands": {
     "forward-action": {
