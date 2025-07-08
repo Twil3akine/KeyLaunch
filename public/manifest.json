@@ -3,7 +3,7 @@
   "name": "Keyboard Cursor Extension",
   "version": "1.0",
   "description": "Control a virtual cursor with the keyboard",
-  "permissions": ["tabs", "scripting", "activeTab"],
+  "permissions": ["tabs", "scripting", "activeTab", "bookmarks"],
   "background": {
     "service_worker": "background.js"
   },
@@ -33,6 +33,13 @@
         "default": "Alt+L"
       },
       "description": "Forward like browser forward"
+    },
+    "toggle-bookmark-manager": {
+      "suggested_key": {
+        "default": "Ctrl+Q",
+        "mac": "Command+Q"
+      },
+      "description": "Toggle bookmark manager panel"
     }
   }
 }
