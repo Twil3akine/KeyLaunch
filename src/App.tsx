@@ -1,11 +1,11 @@
 import KeyboardPointer from "./components/VitualPointer/VirtualPointer";
-import Panel from "./components/BookmarkPanel/BookmarkPanel";
+import BookmarkPanel from "./components/BookmarkPanel/BookmarkPanel";
 
 const App = () => {
   return (
     <>
       <KeyboardPointer />
-      <Panel />
+      <BookmarkPanel />
     </>
   );
 }

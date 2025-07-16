@@ -2,7 +2,7 @@ import type { Bookmark, RuntimeMessage } from "../../types/BookmarkPanel";
 import { initialState, reducer } from "./usePanelState";
 import { useEffect, useRef, useReducer } from "react";
 
-const Panel = () => {
+const BookmarkPanel = () => {
   // useReducerで状態管理
   const [state, dispatch] = useReducer(reducer, initialState);
   // 入力欄のref
@@ -154,4 +154,4 @@ const Panel = () => {
   );
 };
 
-export default Panel;
+export default BookmarkPanel;
