@@ -143,20 +143,22 @@ const Panel = () => {
         <div
           style={{
             position: "fixed",
-            top: "80px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "500px",
-            backgroundColor: "white",
-            color: "black",
+            top: "35vh",
+            left: "50vw",
+            transform: "translate(-50%, -50%)",
+            width: "600px",
+            // maxWidth: "500px",
+            backgroundColor: "#fff",
+            color: "#4b1c1c", // dark red系文字色
             zIndex: 9999999,
-            padding: "1rem",
-            border: "1px solid #ccc",
-            borderRadius: "12px",
-            boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+            padding: "1.5rem",
+            border: "1px solid #fca5a5", // red-300系の薄い赤ボーダー
+            borderRadius: "16px",
+            fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+            fontSize: "1.2rem"
           }}
         >
-          <h2 className="text-lg font-semibold mb-2">📑 ブックマーク管理</h2>
+          
 
           {/* 検索欄 */}
           <input
@@ -165,72 +167,105 @@ const Panel = () => {
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "ArrowDown") {
-                if (state.filtered.length > 0) {
-                  dispatch({
-                    type: "SET_SELECTED_INDEX",
-                    payload: (state.selectedIndex + 1) % state.filtered.length,
-                  });
-                }
-              } else if (e.key === "ArrowUp") {
-                if (state.filtered.length > 0) {
-                  dispatch({
-                    type: "SET_SELECTED_INDEX",
-                    payload: (state.selectedIndex - 1 + state.filtered.length) % state.filtered.length,
-                  });
-                }
-              } else if (e.key === "Enter") {
-                const selected = state.filtered[state.selectedIndex];
-                if (selected) {
-                  window.open(selected.url, "_blank");
-                } else if (state.input.length > 0 && state.filtered.length === 0) {
-                  window.open(`https://www.google.com/search?q=${encodeURIComponent(state.input)}`, "_blank");
-                }
-              } else if (e.key === "Tab") {
                 e.preventDefault();
-                if (state.tabCount === 0 && state.filtered.length > 0) {
-                  dispatch({ type: "SET_INPUT", payload: state.filtered[0].title });
-                  dispatch({ type: "SET_TAB_COUNT", payload: 1 });
-                } else if (state.tabCount === 1) {
-                  const matches = state.bookmarks.filter((b) =>
-                    b.title.toLowerCase().includes(state.input.toLowerCase())
-                  );
-                  dispatch({ type: "SET_FILTERED", payload: matches });
-                  dispatch({ type: "SET_SELECTED_INDEX", payload: 0 });
-                  dispatch({ type: "SET_TAB_COUNT", payload: 2 });
+                const nextIndex = (state.selectedIndex + 1) % state.filtered.length;
+                dispatch({ type: "SET_SELECTED_INDEX", payload: nextIndex });
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                const prevIndex =
+                  (state.selectedIndex - 1 + state.filtered.length) % state.filtered.length;
+                dispatch({ type: "SET_SELECTED_INDEX", payload: prevIndex });
+              } else if (e.key === "Enter") {
+                e.preventDefault();
+                const selectedBookmark = state.filtered[state.selectedIndex];
+                if (selectedBookmark) {
+                  window.open(selectedBookmark.url, "_blank");
                 }
               }
             }}
             placeholder="🔍 ブックマークを検索"
-            className="w-full px-3 py-2 border rounded focus:outline-none"
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "0.5rem 1rem",
+              boxSizing: "border-box",
+              borderRadius: "12px",
+              border: "2px solid #fecaca",
+              fontSize: "1rem",
+              outline: "none",
+              // transition: "border-color 0.3s ease, box-shadow 0.3s ease",
+              marginBottom: "1rem",
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "#ef4444";
+              e.currentTarget.style.boxShadow = "0 0 8px rgba(239, 68, 68, 0.6)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "#fecaca";
+              e.currentTarget.style.boxShadow = "none";
+            }}
           />
 
+
           {/* 候補リスト */}
-            <ul className="mt-2 max-h-64 overflow-y-auto">
-              {state.filtered.map((b, i) => (
-                <li
-                  key={`${b.id}-${i}`}
-                  ref={(el) => {
-                    itemRefs.current[i] = el;
-                  }}
-                  className="px-2 py-1 cursor-pointer rounded transition-colors"
-style={ i === state.selectedIndex ? { backgroundColor: '#3b82f6', color: 'white', fontWeight: '600' } : undefined }
+             <ul
+                style={{
+                  maxHeight: "16rem",
+                  overflowY: "auto",
+                  marginTop: "0.5rem",
+                  borderRadius: "12px",
+                  border: "1px solid #fca5a5", // red-300
+                  boxShadow: "inset 0 0 10px #fee2e2", // 薄い内側の赤い影
+                  padding: 0,
+                  listStyle: "none",
+                }}
+              >
+                {state.filtered.map((b, i) => (
+                  <li
+                    key={`${b.id}-${i}`}
+                    ref={(el) => {
+                      itemRefs.current[i] = el;
+                    }}
+                    style={
+                      i === state.selectedIndex
+                        ? {
+                            backgroundColor: "#ef4444", // red-500
+                            color: "#ffffff",
+                            fontWeight: "600",
+                            borderRadius: "8px",
+                            boxShadow: "0 3px 10px rgba(239, 68, 68, 0.5)",
+                            padding: "0.5rem 1rem",
+                            cursor: "pointer",
+                            // transition: "background-color 0.2s ease, color 0.2s ease",
+                            userSelect: "none",
+                          }
+                        : {
+                            backgroundColor: "transparent",
+                            color: "#b91c1c", // red-700
+                            padding: "0.5rem 1rem",
+                            cursor: "pointer",
+                            // transition: "background-color 0.2s ease, color 0.2s ease",
+                            userSelect: "none",
+                          }
+                    }
+                    onMouseEnter={() => dispatch({ type: "SET_SELECTED_INDEX", payload: i })}
+                    onClick={() => window.open(b.url, "_blank")}
+                    onMouseOver={(e) => {
+                      if (i !== state.selectedIndex) {
+                        (e.currentTarget as HTMLElement).style.backgroundColor = "#fee2e2"; // red-200 薄赤
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (i !== state.selectedIndex) {
+                        (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
+                      }
+                    }}
+                  >
+                    {b.title}
+                  </li>
+                ))}
+              </ul>
 
-                  onMouseEnter={() => dispatch({ type: "SET_SELECTED_INDEX", payload: i })}
-                  onClick={() => window.open(b.url, "_blank")}
-                >
-                  {b.title}
-                </li>
-              ))}
-            </ul>
-
-
-          {/* 閉じるボタン */}
-          <button
-            onClick={() => dispatch({ type: "CLOSE_PANEL" })}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            閉じる
-          </button>
         </div>
       )}
     </div>
