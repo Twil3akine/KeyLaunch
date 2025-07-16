@@ -1,40 +1,6 @@
-import type { Bookmark, PanelState, PanelAction, RuntimeMessage } from "../../types/BookmarkPanel";
+import type { Bookmark, RuntimeMessage } from "../../types/BookmarkPanel";
+import { initialState, reducer } from "./usePanelState";
 import { useEffect, useRef, useReducer } from "react";
-
-// パネルの初期状態
-const initialState: PanelState = {
-  showBookmarkManager: false,
-  input: "",
-  bookmarks: [],
-  filtered: [],
-  topBookmarks: [],
-  selectedIndex: 0,
-  tabCount: 0,
-};
-
-// useReducerのreducer関数
-const reducer = (state: PanelState, action: PanelAction): PanelState => {
-  switch (action.type) {
-    case "TOGGLE_PANEL":
-      return { ...state, showBookmarkManager: !state.showBookmarkManager };
-    case "SET_INPUT":
-      return { ...state, input: action.payload };
-    case "SET_BOOKMARKS":
-      return { ...state, bookmarks: action.payload };
-    case "SET_FILTERED":
-      return { ...state, filtered: action.payload };
-    case "SET_TOP_BOOKMARKS":
-      return { ...state, topBookmarks: action.payload };
-    case "SET_SELECTED_INDEX":
-      return { ...state, selectedIndex: action.payload };
-    case "SET_TAB_COUNT":
-      return { ...state, tabCount: action.payload };
-    case "CLOSE_PANEL":
-      return { ...state, showBookmarkManager: false };
-    default:
-      return state;
-  }
-};
 
 const Panel = () => {
   // useReducerで状態管理
