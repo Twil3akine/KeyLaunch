@@ -1,4 +1,4 @@
-import { useEffect, useRef, useReducer } from "react";
+import { useEffect, useRef, useReducer, useState } from "react";
 
 // ブックマーク型定義
 type Bookmark = {
@@ -72,6 +72,52 @@ const Panel = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const inputRef = useRef<HTMLInputElement>(null);
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
+
+  // ダークモード・ライトモード判定
+  const [theme, setTheme] = useState<"light" | "dark">(
+    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+  );
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e: MediaQueryListEvent) => {
+      setTheme(e.matches ? "dark" : "light");
+    };
+    media.addEventListener("change", handler);
+    return () => media.removeEventListener("change", handler);
+  }, []);
+
+  // ライト・ダークの色定義
+  const colors = {
+    light: {
+      panelBg: "#ffffffff",
+      panelText: "#4b1c1c",
+      border: "#fca5a5",
+      boxShadow: "0 3px 10px rgba(239, 68, 68, 0.5)",
+      boxShadowInset: "inset 0 0 10px #fee2e2",
+      inputBorder: "#fca5a5",
+      inputFocusBorder: "none",//"#ef4444",
+      listItemHoverBg: "#fee2e2",
+      selectedBg: "#ef4444",
+      selectedText: "#fff",
+      unselectedText: "#b91c1c",
+    },
+    dark: {
+      panelBg: "#2e2e2eff", // 暗いグレー
+      panelText: "#f9fafb", // 薄い白系
+      border: "#5a5a5aff", // ダークグレー
+      boxShadow: "0 1px 5px rgba(245, 158, 11, 0.7)", // オレンジ系の影
+      boxShadowInset: "inset 0 0 5px #f59e0b",
+      inputBorder: "#5a5a5aff",
+      inputFocusBorder: "none",//"#f59e0b",
+      listItemHoverBg: "#374151",
+      selectedBg: "#f59e0b", // 黄色系
+      selectedText: "#1f1f1fff", // 背景に合わせてダーク文字
+      unselectedText: "#f9fafb",
+    },
+  };
+
+  const themeColors = theme === "dark" ? colors.dark : colors.light;
 
   // パネルの開閉トグル
   useEffect(() => {
@@ -147,15 +193,15 @@ const Panel = () => {
             left: "50vw",
             transform: "translate(-50%, -50%)",
             width: "600px",
-            // maxWidth: "500px",
-            backgroundColor: "#fff",
-            color: "#4b1c1c", // dark red系文字色
+            backgroundColor: themeColors.panelBg,
+            color: themeColors.panelText,
             zIndex: 9999999,
             padding: "1.5rem",
-            border: "1px solid #fca5a5", // red-300系の薄い赤ボーダー
+            border: `1px solid ${themeColors.border}`,
             borderRadius: "16px",
             fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            fontSize: "1.2rem"
+            fontSize: "1.2rem",
+            boxShadow: themeColors.boxShadow,
           }}
         >
           
@@ -190,18 +236,19 @@ const Panel = () => {
               padding: "0.5rem 1rem",
               boxSizing: "border-box",
               borderRadius: "12px",
-              border: "2px solid #fecaca",
+              border: `2px solid ${themeColors.inputBorder}`,
               fontSize: "1rem",
               outline: "none",
-              // transition: "border-color 0.3s ease, box-shadow 0.3s ease",
               marginBottom: "1rem",
+              backgroundColor: themeColors.panelBg,
+              color: themeColors.panelText,
             }}
             onFocus={(e) => {
-              e.currentTarget.style.borderColor = "#ef4444";
-              e.currentTarget.style.boxShadow = "0 0 8px rgba(239, 68, 68, 0.6)";
+              e.currentTarget.style.borderColor = themeColors.inputFocusBorder;
+              e.currentTarget.style.boxShadow = `0 0 8px ${themeColors.inputFocusBorder}`;
             }}
             onBlur={(e) => {
-              e.currentTarget.style.borderColor = "#fecaca";
+              e.currentTarget.style.borderColor = themeColors.inputBorder;
               e.currentTarget.style.boxShadow = "none";
             }}
           />
@@ -209,15 +256,16 @@ const Panel = () => {
 
           {/* 候補リスト */}
              <ul
-                style={{
-                  maxHeight: "16rem",
-                  overflowY: "auto",
-                  marginTop: "0.5rem",
-                  borderRadius: "12px",
-                  border: "1px solid #fca5a5", // red-300
-                  boxShadow: "inset 0 0 10px #fee2e2", // 薄い内側の赤い影
-                  padding: 0,
-                  listStyle: "none",
+            style={{
+              maxHeight: "16rem",
+              overflowY: "auto",
+              marginTop: "0.5rem",
+              borderRadius: "12px",
+              border: `1px solid ${themeColors.border}`,
+              //boxShadow: themeColors.boxShadowInset,
+              padding: 0,
+              listStyle: "none",
+              boxShadow: themeColors.boxShadowInset
                 }}
               >
                 {state.filtered.map((b, i) => (
@@ -229,36 +277,34 @@ const Panel = () => {
                     style={
                       i === state.selectedIndex
                         ? {
-                            backgroundColor: "#ef4444", // red-500
-                            color: "#ffffff",
+                            backgroundColor: themeColors.selectedBg,
+                            color: themeColors.selectedText,
                             fontWeight: "600",
                             borderRadius: "8px",
-                            boxShadow: "0 3px 10px rgba(239, 68, 68, 0.5)",
                             padding: "0.5rem 1rem",
                             cursor: "pointer",
-                            // transition: "background-color 0.2s ease, color 0.2s ease",
                             userSelect: "none",
                           }
                         : {
                             backgroundColor: "transparent",
-                            color: "#b91c1c", // red-700
+                            color: themeColors.unselectedText,
                             padding: "0.5rem 1rem",
                             cursor: "pointer",
-                            // transition: "background-color 0.2s ease, color 0.2s ease",
                             userSelect: "none",
                           }
                     }
                     onMouseEnter={() => dispatch({ type: "SET_SELECTED_INDEX", payload: i })}
                     onClick={() => window.open(b.url, "_blank")}
                     onMouseOver={(e) => {
-                      if (i !== state.selectedIndex) {
-                        (e.currentTarget as HTMLElement).style.backgroundColor = "#fee2e2"; // red-200 薄赤
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (i !== state.selectedIndex) {
-                        (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
-                      }
+                  if (i !== state.selectedIndex) {
+                      (e.currentTarget as HTMLElement).style.backgroundColor =
+                        themeColors.listItemHoverBg;
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (i !== state.selectedIndex) {
+                      (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
+                    }
                     }}
                   >
                     {b.title}
