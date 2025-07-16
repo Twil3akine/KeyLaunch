@@ -1,33 +1,5 @@
+import type { Bookmark, PanelState, PanelAction, RuntimeMessage } from "../../types/BookmarkPanel";
 import { useEffect, useRef, useReducer } from "react";
-
-// ブックマーク型定義
-type Bookmark = {
-  id: string;
-  title: string;
-  url: string;
-};
-
-// パネルの状態型定義
-type PanelState = {
-  showBookmarkManager: boolean;
-  input: string;
-  bookmarks: Bookmark[];
-  filtered: Bookmark[];
-  topBookmarks: Bookmark[];
-  selectedIndex: number;
-  tabCount: number;
-};
-
-// useReducer用アクション型定義
-type PanelAction =
-  | { type: "TOGGLE_PANEL" }
-  | { type: "SET_INPUT"; payload: string }
-  | { type: "SET_BOOKMARKS"; payload: Bookmark[] }
-  | { type: "SET_FILTERED"; payload: Bookmark[] }
-  | { type: "SET_TOP_BOOKMARKS"; payload: Bookmark[] }
-  | { type: "SET_SELECTED_INDEX"; payload: number }
-  | { type: "SET_TAB_COUNT"; payload: number }
-  | { type: "CLOSE_PANEL" };
 
 // パネルの初期状態
 const initialState: PanelState = {
@@ -41,7 +13,7 @@ const initialState: PanelState = {
 };
 
 // useReducerのreducer関数
-function reducer(state: PanelState, action: PanelAction): PanelState {
+const reducer = (state: PanelState, action: PanelAction): PanelState => {
   switch (action.type) {
     case "TOGGLE_PANEL":
       return { ...state, showBookmarkManager: !state.showBookmarkManager };
@@ -62,11 +34,6 @@ function reducer(state: PanelState, action: PanelAction): PanelState {
     default:
       return state;
   }
-}
-
-// chrome.runtime.onMessageの型定義
-type RuntimeMessage = {
-  action: "toggleBookmarkManager" | "getBookmarks";
 };
 
 const Panel = () => {
@@ -136,7 +103,7 @@ const Panel = () => {
             width: "500px",
             backgroundColor: "white",
             color: "black",
-            zIndex: 9999999,
+            zIndex: 10000,
             padding: "1rem",
             border: "1px solid #ccc",
             borderRadius: "12px",
