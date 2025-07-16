@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { PointerPosition } from '../../types/KeyboardPointer';
+import type { PointerPosition } from '../../types/VirtualPointer';
 
 type Handlers = {
   // 座標系: clientX, clientY を計算するために position.x/y と pointerSize/2 が必要
@@ -16,7 +16,7 @@ type Handlers = {
 };
 
 /**
- * useKeyboardEvents: document-level の keydown 登録と各種ハンドラ呼び出し
+ * useVirtualEvents: document-level の keydown 登録と各種ハンドラ呼び出し
  * positionRef: 最新の position
  * pointerSize: ポインタの大きさ
  * 
@@ -30,7 +30,7 @@ type Handlers = {
  * - Alt+Space 右クリック
  * - h/j/k/l でカーソル移動
  */
-export function useKeyboardEvents(
+export function useVirtualEvents(
   positionRef: React.MutableRefObject<PointerPosition>,
   pointerSize: number,
   margin: number,

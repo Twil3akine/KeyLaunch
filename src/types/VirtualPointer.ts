@@ -3,14 +3,14 @@ export type PointerPosition = {
     y: number; // pointerのY座標
 }
 
-export type KeyboardState = {
+export type VirtualState = {
     mode: 'idle' | 'focus' | 'copy'; // 現在のモード
     position: PointerPosition; // 現在のポインタ位置
     anchorNode: Text | null; // 選択範囲のアンカーノード
     anchorOffset: number; // 選択範囲のアンカーオフセット
 };
 
-export type KeyboardPointerActions = 
+export type VirtualPointerActions = 
     | { type: 'INIT_MOVE'; position: PointerPosition } // 初期位置設定
     | { type: 'START_COPY'; node: Text; offset: number; rect: DOMRect } // コピー選択開始
     | { type: 'ADJUST_COPY'; node: Text; offset: number; rect: DOMRect } // コピー選択調整
