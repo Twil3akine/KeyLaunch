@@ -1,24 +1,24 @@
 /// <reference types="chrome" />
 
 import { useRef, useState, useCallback } from 'react';
-import type { PointerPosition } from '../../types/KeyboardPointer';
+import type { PointerPosition } from '../../types/VirtualPointer';
 import { useCopySelection } from './useCopySelection';
 import { useFocusBehavior } from './useFocusBehavior';
 import { usePointerMovement } from './usePointerMovement';
-import { useKeyboardEvents } from './useKeyboardEvents';
+import { useVirtualEvents } from './useVirtualEvents';
 import { dispatchMouseEvent } from '../../utils/domEvents';
 
-type UseKeyboardPointerOptions = {
+type UseVirtualPointerOptions = {
   pointerSize: number;
   margin: number;
 };
 
 /**
- * useKeyboardPointer: 仮想ポインタの状態管理・キーボード操作統合フック
+ * useVirtualPointer: 仮想ポインタの状態管理・キーボード操作統合フック
  * - ポインタ位置、コピー選択モード、フォーカスモードの管理
  * - 各種キーボード操作に応じてポインタ移動、選択、クリック、ダブルクリック、右クリックなどを制御
  */
-export function useKeyboardPointer({ pointerSize, margin }: UseKeyboardPointerOptions) {
+export function useVirtualPointer({ pointerSize, margin }: UseVirtualPointerOptions) {
   // 1. position state & ref
   // 画面中央に初期配置
   const [position, setPosition] = useState<PointerPosition>({
@@ -182,7 +182,7 @@ export function useKeyboardPointer({ pointerSize, margin }: UseKeyboardPointerOp
   }, [move]);
 
   // 6. キーボードイベント登録
-  useKeyboardEvents(positionRef, pointerSize, margin, {
+  useVirtualEvents(positionRef, pointerSize, margin, {
     handleCopyToggle,
     handleCancel,
     handleCopyAdjust,

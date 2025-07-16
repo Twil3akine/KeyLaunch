@@ -4,7 +4,7 @@ import {
   getCharRangeAtOffset,
   getCharRangeIndex,
 } from '../../utils/textMap'; // テキスト選択の管理をbodyのindexでやる方針に切り替えた
-//import type { PointerPosition } from '../../types/KeyboardPointer'; //現在は使っていない
+//import type { PointerPosition } from '../../types/VirtualPointer'; //現在は使っていない
 
 
 type UseCopySelectionReturn = {

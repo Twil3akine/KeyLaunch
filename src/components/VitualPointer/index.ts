@@ -1,3 +1,3 @@
-// src/components/KeyboardPointer/index.ts
-export { useKeyboardPointer } from './useKeyboardPointer';
-export type { PointerPosition } from '../../types/KeyboardPointer';
+// src/components/VirtualPointer/index.ts
+export { useVirtualPointer } from './useVirtualPointer';
+export type { PointerPosition } from '../../types/VirtualPointer';

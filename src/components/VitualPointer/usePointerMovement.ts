@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { dispatchMouseEvent } from '../../utils/domEvents';
-import type { PointerPosition } from '../../types/KeyboardPointer';
+import type { PointerPosition } from '../../types/VirtualPointer';
 
 /**
  * usePointerMovement: ポインタ移動ロジック
