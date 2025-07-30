@@ -16,6 +16,7 @@ type PanelState = {
   topBookmarks: Bookmark[];
   selectedIndex: number;
   tabCount: number;
+  tabPressedCount: number;
 };
 
 // useReducer用アクション型定義
@@ -27,7 +28,8 @@ type PanelAction =
   | { type: "SET_TOP_BOOKMARKS"; payload: Bookmark[] }
   | { type: "SET_SELECTED_INDEX"; payload: number }
   | { type: "SET_TAB_COUNT"; payload: number }
-  | { type: "CLOSE_PANEL" };
+  | { type: "CLOSE_PANEL" }
+  | { type: "SET_TAB_PRESSED_COUNT"; payload: number };
 
 // 初期状態
 const initialState: PanelState = {
@@ -38,6 +40,7 @@ const initialState: PanelState = {
   topBookmarks: [],
   selectedIndex: 0,
   tabCount: 0,
+  tabPressedCount: 0,
 };
 
 // reducer関数
@@ -59,6 +62,8 @@ function reducer(state: PanelState, action: PanelAction): PanelState {
       return { ...state, tabCount: action.payload };
     case "CLOSE_PANEL":
       return { ...state, showBookmarkManager: false };
+    case "SET_TAB_PRESSED_COUNT":
+      return { ...state, tabPressedCount: action.payload };
     default:
       return state;
   }
@@ -171,6 +176,8 @@ const Panel = () => {
   const handleInputChange = (val: string) => {
     dispatch({ type: "SET_INPUT", payload: val });
     dispatch({ type: "SET_TAB_COUNT", payload: 0 });
+    dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 0 });
+
 
     if (val === "") {
       dispatch({ type: "SET_FILTERED", payload: state.topBookmarks });
@@ -216,19 +223,41 @@ const Panel = () => {
                 e.preventDefault();
                 const nextIndex = (state.selectedIndex + 1) % state.filtered.length;
                 dispatch({ type: "SET_SELECTED_INDEX", payload: nextIndex });
+                dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 0 }); // tab状態リセット
               } else if (e.key === "ArrowUp") {
                 e.preventDefault();
                 const prevIndex =
                   (state.selectedIndex - 1 + state.filtered.length) % state.filtered.length;
                 dispatch({ type: "SET_SELECTED_INDEX", payload: prevIndex });
+                dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 0 }); // tab状態リセット
               } else if (e.key === "Enter") {
                 e.preventDefault();
                 const selectedBookmark = state.filtered[state.selectedIndex];
                 if (selectedBookmark) {
                   window.open(selectedBookmark.url, "_blank");
+                } else if (state.input.trim() !== "") {
+                  const query = encodeURIComponent(state.input.trim());
+                  window.open(`https://www.google.com/search?q=${query}`, "_blank");
+                }
+                dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 0 });
+              } else if (e.key === "Tab") {
+                e.preventDefault();
+                if (state.tabPressedCount === 0 && state.filtered.length > 0) {
+                  const top = state.filtered[0];
+                  dispatch({ type: "SET_INPUT", payload: top.title });
+                  dispatch({ type: "SET_SELECTED_INDEX", payload: 0 });
+                  dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 1 });
+                } else {
+                  const matches = state.bookmarks.filter((b) =>
+                    b.title.toLowerCase().includes(state.input.toLowerCase())
+                  );
+                  dispatch({ type: "SET_FILTERED", payload: matches });
+                  dispatch({ type: "SET_SELECTED_INDEX", payload: 0 });
+                  dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 2 });
                 }
               }
             }}
+
             placeholder="🔍 ブックマークを検索"
             style={{
               display: "block",
