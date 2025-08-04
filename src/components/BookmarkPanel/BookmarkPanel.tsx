@@ -73,7 +73,7 @@ type RuntimeMessage = {
   action: "toggleBookmarkManager" | "getBookmarks";
 };
 
-const Panel = () => {
+const BookmarkPanel = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const inputRef = useRef<HTMLInputElement>(null);
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
