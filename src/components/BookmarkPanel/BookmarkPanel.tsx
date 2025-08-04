@@ -347,4 +347,4 @@ const Panel = () => {
   );
 };
 
-export default Panel;
+export default BookmarkPanel;
