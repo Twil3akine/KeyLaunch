@@ -83,6 +83,7 @@ const VirtualPointer: React.FC<Props> = ({ isShowBookmarkPanel }) => {
         width: `${pointerSize}px`,
         height: `${pointerSize}px`,
         background: isCopyMode ? 'green' : (isFocusing || isShowBookmarkPanel) ? 'blue' : 'red',
+        display: isShowBookmarkPanel ? 'none' : 'block',
         borderRadius: '50%',
         zIndex: 9999999998,
         pointerEvents: 'none',
