@@ -153,12 +153,12 @@ const BookmarkPanel = () => {
             value={state.input}
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "ArrowDown") {
+              if (e.key === "ArrowDown" || (e.altKey && e.key === 'j')) {
                 e.preventDefault();
                 const nextIndex = (state.selectedIndex + 1) % state.filtered.length;
                 dispatch({ type: "SET_SELECTED_INDEX", payload: nextIndex });
                 dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 0 }); // tab状態リセット
-              } else if (e.key === "ArrowUp") {
+              } else if (e.key === "ArrowUp" || (e.altKey && e.key === 'k')) {
                 e.preventDefault();
                 const prevIndex =
                   (state.selectedIndex - 1 + state.filtered.length) % state.filtered.length;
