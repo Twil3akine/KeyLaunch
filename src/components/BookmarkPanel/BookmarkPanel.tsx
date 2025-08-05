@@ -1,79 +1,13 @@
 import { useEffect, useRef, useReducer, useState } from "react";
+import type { Bookmark } from "../../types/BookmarkPanel";
+import { initialState, reducer } from "./usePanelState";
 
-// ブックマーク型定義
-type Bookmark = {
-  id: string;
-  title: string;
-  url: string;
-};
-
-// パネルの状態型定義
-type PanelState = {
-  showBookmarkManager: boolean;
-  input: string;
-  bookmarks: Bookmark[];
-  filtered: Bookmark[];
-  topBookmarks: Bookmark[];
-  selectedIndex: number;
-  tabCount: number;
-  tabPressedCount: number;
-};
-
-// useReducer用アクション型定義
-type PanelAction =
-  | { type: "TOGGLE_PANEL" }
-  | { type: "SET_INPUT"; payload: string }
-  | { type: "SET_BOOKMARKS"; payload: Bookmark[] }
-  | { type: "SET_FILTERED"; payload: Bookmark[] }
-  | { type: "SET_TOP_BOOKMARKS"; payload: Bookmark[] }
-  | { type: "SET_SELECTED_INDEX"; payload: number }
-  | { type: "SET_TAB_COUNT"; payload: number }
-  | { type: "CLOSE_PANEL" }
-  | { type: "SET_TAB_PRESSED_COUNT"; payload: number };
-
-// 初期状態
-const initialState: PanelState = {
-  showBookmarkManager: false,
-  input: "",
-  bookmarks: [],
-  filtered: [],
-  topBookmarks: [],
-  selectedIndex: 0,
-  tabCount: 0,
-  tabPressedCount: 0,
-};
-
-// reducer関数
-function reducer(state: PanelState, action: PanelAction): PanelState {
-  switch (action.type) {
-    case "TOGGLE_PANEL":
-      return { ...state, showBookmarkManager: !state.showBookmarkManager };
-    case "SET_INPUT":
-      return { ...state, input: action.payload };
-    case "SET_BOOKMARKS":
-      return { ...state, bookmarks: action.payload };
-    case "SET_FILTERED":
-      return { ...state, filtered: action.payload };
-    case "SET_TOP_BOOKMARKS":
-      return { ...state, topBookmarks: action.payload };
-    case "SET_SELECTED_INDEX":
-      return { ...state, selectedIndex: action.payload };
-    case "SET_TAB_COUNT":
-      return { ...state, tabCount: action.payload };
-    case "CLOSE_PANEL":
-      return { ...state, showBookmarkManager: false };
-    case "SET_TAB_PRESSED_COUNT":
-      return { ...state, tabPressedCount: action.payload };
-    default:
-      return state;
-  }
-}
 
 type RuntimeMessage = {
   action: "toggleBookmarkManager" | "getBookmarks";
 };
 
-const Panel = () => {
+const BookmarkPanel = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const inputRef = useRef<HTMLInputElement>(null);
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);

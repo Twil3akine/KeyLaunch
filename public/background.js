@@ -11,8 +11,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: (direction) => {
-          if (direction === "back") history.back();
-          else history.forward();
+          try {
+            if (direction === "back") {
+              history.back();
+            } else {
+              history.forward();
+            }
+          } catch (e) {
+            console.warn('History navigation error:', e);
+          }
         },
         args: [message.action === "goBack" ? "back" : "forward"],
       });
@@ -22,7 +29,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 chrome.commands.onCommand.addListener((command) => {
   if (command === "forward-action") {
-    chrome.tabs.goForward();
+    chrome.tabs.goForward().catch((e) => {
+      console.warn('No next page in history.', e);
+    });
   }
 
   if (command === "toggle-bookmark-manager") {

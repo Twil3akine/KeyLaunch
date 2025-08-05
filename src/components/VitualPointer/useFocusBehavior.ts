@@ -16,18 +16,22 @@ export function useFocusBehavior() {
    * 指定した要素にフォーカスをセットし、状態を管理
    * フォーカス中は仮想ポインタの色を変えるなどのUI反映を想定
    */
-  const startFocus = useCallback((target: Element) => {
-    if (
-      ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) &&
-      target instanceof HTMLElement &&
-      typeof target.focus === 'function' &&
-      !target.hasAttribute('disabled')
-    ) {
-      target.focus({ preventScroll: true });
-      isFocusingRef.current = true;
-      setIsFocusing(true);
-    }
-  }, []);
+const startFocus = useCallback((target: Element) => {
+  if (
+    target instanceof HTMLElement &&
+    (
+      ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) ||
+      target.isContentEditable
+    ) &&
+    typeof target.focus === 'function' &&
+    !target.hasAttribute('disabled')
+  ) {
+    target.focus({ preventScroll: true });
+    isFocusingRef.current = true;
+    setIsFocusing(true);
+  }
+}, []);
+
 
   /**
    * フォーカス状態を解除し、状態をリセットする

@@ -7,7 +7,7 @@ const margin = 20;
 
 const VirtualPointer: React.FC = () => {
   const pointerRef = useRef<HTMLDivElement>(null);
-  const { position, isFocusing, isCopyMode } = useVirtualPointer({ pointerSize, margin });
+  const { position, isFocusing, isCopyMode, startFocus } = useVirtualPointer({ pointerSize, margin });
   /**   現状は必要ない（現在の設計では使ってない）が、
    * 仮想ポインタの div 要素に ref（pointerRef）を利用するケースは以下の2つが考えられる:
    * 1.フックのrefからVirturePointerのref（pointerRef）に返す場合
@@ -17,6 +17,7 @@ const VirtualPointer: React.FC = () => {
    * 1.返す場合は、VirtualPointer側の記述をconst { position, isFocusing, isCopyMode, pointerRef } = useVirtualPointer({ pointerSize, margin });のようにして、useVirtualPointer の返り値に pointerRef を含める設計にする 
    * 2.渡す場合は、（useVirtualPointer({pointerSize, margin, pointerRef}) などのようにuseVirtualPointer の引数として渡すように設計する 
    */
+
 
   // 初回描画時やリサイズ時に位置をウィンドウ中央に初期化したい場合はここで処理
   useEffect(() => {
@@ -63,7 +64,14 @@ const VirtualPointer: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-
+  
+  useEffect(() => {
+    const active = document.activeElement;
+    if (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) {
+      // useFocusBehavior の startFocus を呼び出す形で状態をセットする
+      startFocus(active);
+    }
+  }, []);
   
 
   return (
