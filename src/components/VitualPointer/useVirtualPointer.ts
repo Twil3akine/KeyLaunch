@@ -133,17 +133,34 @@ export function useVirtualPointer({ pointerSize, margin }: UseVirtualPointerOpti
    * Ctrl+Space でのクリック + フォーカス処理
    * 仮想ポインタ位置でマウスイベントを発火し、フォーカス可能ならフォーカス開始
    */
-  const handleClickFocus = useCallback((clientX: number, clientY: number) => {
-    // クリック発行
-    (['mousedown', 'mouseup', 'click'] as const).forEach((type) => {
-      dispatchMouseEvent(type, clientX, clientY);
-    });
-    // フォーカス
-    const target = document.elementFromPoint(clientX, clientY);
-    if (target) {
-      startFocus(target);
-    }
-  }, [startFocus]);
+const handleClickFocus = useCallback((clientX: number, clientY: number) => {
+  // クリックイベントを発行
+  console.log('handleClickFocus:', clientX, clientY);
+  (['mousedown', 'mouseup', 'click'] as const).forEach((type) => {
+    dispatchMouseEvent(type, clientX, clientY);
+  });
+
+  // elementFromPointで要素を取得
+  const target = document.elementFromPoint(clientX, clientY);
+  console.log('elementFromPoint:', target);
+
+  if (!target || !(target instanceof HTMLElement)) return;
+
+  // 最も近い入力可能な要素を親方向にたどる
+  // ここで「近い入力可能な要素」とは、自身か親要素で textarea, input, contenteditable="true" のいずれかに該当するものを意味する
+  // クリックが placeholder や子要素に当たっても、親の入力可能な要素を取得するために使う
+  const focusable = target.closest('textarea, input, [contenteditable="true"]');
+
+  if (focusable instanceof HTMLElement) {
+    console.log('found focusable element via closest:', focusable);
+    // 見つかった入力要素にフォーカスをセット
+    startFocus(focusable);
+  } else {
+    console.log('no focusable element found');
+  }
+}, [startFocus]);
+
+
 
   /**
    * Ctrl+Alt+Space でのダブルクリック処理
@@ -203,5 +220,6 @@ export function useVirtualPointer({ pointerSize, margin }: UseVirtualPointerOpti
     getPointerRef: () => {//外部から pointerRef にアクセスさせたい場合に使う関数
       return null;
     },
+    startFocus,
   };
 }
