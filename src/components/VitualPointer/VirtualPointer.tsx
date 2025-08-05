@@ -67,7 +67,7 @@ const VirtualPointer: React.FC<Props> = ({ isShowBookmarkPanel }) => {
       (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName));
     console.log(isShowBookmarkPanel, (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)));
     if (shouldFocus) {
-      startFocus(active ?? document.body, isShowBookmarkPanel);
+      startFocus(active ?? document.body);
     } else {
       cancelFocus(isShowBookmarkPanel);
     }
@@ -82,9 +82,9 @@ const VirtualPointer: React.FC<Props> = ({ isShowBookmarkPanel }) => {
         position: 'fixed',
         width: `${pointerSize}px`,
         height: `${pointerSize}px`,
-        background: isCopyMode ? 'green' : isFocusing ? 'blue' : 'red',
+        background: isCopyMode ? 'green' : (isFocusing || isShowBookmarkPanel) ? 'blue' : 'red',
         borderRadius: '50%',
-        zIndex: 20000,
+        zIndex: 9999999998,
         pointerEvents: 'none',
         left: `${position.x}px`,
         top: `${position.y}px`,
