@@ -94,7 +94,11 @@ export function useVirtualPointer({ pointerSize, margin }: UseVirtualPointerOpti
         if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
           chrome.runtime.sendMessage({ action: 'goBack' });
         } else {
-          window.history.back();
+          try {
+            window.history.forward();
+          } catch (e) {
+            console.warn('No next page in history.', e);
+          }
         }
         return true;
       }
@@ -102,7 +106,11 @@ export function useVirtualPointer({ pointerSize, margin }: UseVirtualPointerOpti
         if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
           chrome.runtime.sendMessage({ action: 'goForward' });
         } else {
-          window.history.forward();
+          try {
+            window.history.forward();
+          } catch (e) {
+            console.warn('No next page in history.', e);
+          }
         }
         return true;
       }
@@ -122,7 +130,11 @@ export function useVirtualPointer({ pointerSize, margin }: UseVirtualPointerOpti
         return true;
       }
       if (key === 'l') {
-        window.history.forward();
+        try {
+          window.history.forward();
+        } catch (e) {
+          console.warn('No next page in history.', e);
+        }
         return true;
       }
       return false;
