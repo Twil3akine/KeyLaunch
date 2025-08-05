@@ -221,13 +221,14 @@ const handleClickFocus = useCallback((clientX: number, clientY: number) => {
   });
 
   return {
-    pointerRef: null as unknown as React.RefObject<HTMLDivElement>, // 実装時に ref を渡す場合は変更
+    pointerRef: null as unknown as React.RefObject<HTMLDivElement>,
     position,
     isFocusing,
     isCopyMode,
-    getPointerRef: () => {//外部から pointerRef にアクセスさせたい場合に使う関数
+    getPointerRef: () => {
       return null;
     },
     startFocus,
+    cancelFocus, // ← 追加
   };
 }

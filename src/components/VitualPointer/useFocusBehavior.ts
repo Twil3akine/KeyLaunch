@@ -14,36 +14,48 @@ export function useFocusBehavior() {
 
   /**
    * 指定した要素にフォーカスをセットし、状態を管理
-   * フォーカス中は仮想ポインタの色を変えるなどのUI反映を想定
+   * isShowBookmarkPanelを引数で受けて状態を制御
    */
-const startFocus = useCallback((target: Element) => {
-  if (
-    target instanceof HTMLElement &&
-    (
-      ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) ||
-      target.isContentEditable
-    ) &&
-    typeof target.focus === 'function' &&
-    !target.hasAttribute('disabled')
-  ) {
-    target.focus({ preventScroll: true });
-    isFocusingRef.current = true;
-    setIsFocusing(true);
-  }
-}, []);
+  const startFocus = useCallback((target: Element, isShowBookmarkPanel?: boolean) => {
+    if (
+      target instanceof HTMLElement &&
+      (
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) ||
+        target.isContentEditable
+      ) &&
+      typeof target.focus === 'function' &&
+      !target.hasAttribute('disabled')
+    ) {
+      target.focus({ preventScroll: true });
+    }
+    // isShowBookmarkPanelがtrueなら強制的にフォーカス状態に
+    if (isShowBookmarkPanel !== undefined) {
+      isFocusingRef.current = isShowBookmarkPanel;
+      setIsFocusing(isShowBookmarkPanel);
+    } else {
+      isFocusingRef.current = true;
+      setIsFocusing(true);
+    }
+  }, []);
 
 
   /**
    * フォーカス状態を解除し、状態をリセットする
-   * 仮想ポインタの色も元に戻すなどの処理を想定
+   * isShowBookmarkPanelを引数で受けて状態を制御
    */
-  const cancelFocus = useCallback(() => {
+  const cancelFocus = useCallback((isShowBookmarkPanel?: boolean) => {
     const active = document.activeElement;
     if (active && typeof (active as HTMLElement).blur === 'function') {
       (active as HTMLElement).blur();
     }
-    isFocusingRef.current = false;
-    setIsFocusing(false);
+    // isShowBookmarkPanelがfalseなら強制的に解除
+    if (isShowBookmarkPanel !== undefined) {
+      isFocusingRef.current = isShowBookmarkPanel;
+      setIsFocusing(isShowBookmarkPanel);
+    } else {
+      isFocusingRef.current = false;
+      setIsFocusing(false);
+    }
   }, []);
 
   return {
