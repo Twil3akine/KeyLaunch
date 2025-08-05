@@ -94,11 +94,7 @@ export function useVirtualPointer({ pointerSize, margin }: UseVirtualPointerOpti
         if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
           chrome.runtime.sendMessage({ action: 'goBack' });
         } else {
-          try {
-            window.history.forward();
-          } catch (e) {
-            console.warn('No next page in history.', e);
-          }
+          window.history.back();
         }
         return true;
       }
