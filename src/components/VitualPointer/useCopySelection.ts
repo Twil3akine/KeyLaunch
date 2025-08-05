@@ -3,6 +3,7 @@ import {
   getNearestCharRange,
   getCharRangeAtOffset,
   getCharRangeIndex,
+  getCharRangeLength,
 } from '../../utils/textMap'; // テキスト選択の管理をbodyのindexでやる方針に切り替えた
 //import type { PointerPosition } from '../../types/VirtualPointer'; //現在は使っていない
 
@@ -14,6 +15,7 @@ type UseCopySelectionReturn = {
     direction: 'left' | 'right',
     onUpdate: (pos: { x: number; y: number }) => void
   ) => void;
+  selectAll: () => void;
   cancelCopy: () => void;
 };
 
@@ -109,6 +111,27 @@ export function useCopySelection(): UseCopySelectionReturn {
     onUpdate({ x: rect.left, y: rect.bottom });
   };
 
+  const selectAll = () => {
+    const totalCount = getCharRangeLength();
+    if (totalCount === 0) return;
+
+    const firstChar = getCharRangeAtOffset(0);
+    const lastChar = getCharRangeAtOffset(totalCount - 1);
+
+    if (!firstChar || !lastChar) return;
+
+    const range = document.createRange();
+    range.setStart(firstChar.range.startContainer, firstChar.range.startOffset);
+    range.setEnd(lastChar.range.endContainer, lastChar.range.endOffset);
+
+    const selection = window.getSelection();
+    if (selection) {
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  };
+
+
   /**
    * コピー選択解除 (Escape)
    * 選択範囲をクリアし、状態をリセットする
@@ -126,6 +149,7 @@ export function useCopySelection(): UseCopySelectionReturn {
     isCopyMode,
     startCopy,
     adjustCopy,
+    selectAll,
     cancelCopy,
   };
 }

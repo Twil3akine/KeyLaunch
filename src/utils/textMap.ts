@@ -117,3 +117,8 @@ export const getCharRangeIndex = (target: Range): number => {
   return -1; //該当の文字がなければ-1を返し、無いことを示す
   //-1を返すと、getCharRangeAtOffsetにおいてnullが返り、それを判定して処理を止める
 };
+
+/**
+ * charRangesの（全体の範囲に対する）インデックスの長さを返す
+ */
+export const getCharRangeLength = () => charRanges.length;

@@ -37,6 +37,7 @@ export function useVirtualPointer({ pointerSize, margin }: UseVirtualPointerOpti
     isCopyMode,
     startCopy,
     adjustCopy,
+    selectAll,
     cancelCopy,
   } = useCopySelection();
 
@@ -83,6 +84,10 @@ export function useVirtualPointer({ pointerSize, margin }: UseVirtualPointerOpti
       updatePosition({ x: pos.x - pointerSize / 2, y: pos.y - pointerSize / 2 });
     });
   }, [adjustCopy, updatePosition, pointerSize]);
+
+  const handleSelectAll = useCallback(() => {
+    selectAll();
+  }, [selectAll]);
 
   /**
    * Alt+H/L/J/K キーでのページスクロールや履歴移動（Chrome拡張のメッセージ送信）
@@ -211,6 +216,7 @@ const handleClickFocus = useCallback((clientX: number, clientY: number) => {
     handleCopyToggle,
     handleCancel,
     handleCopyAdjust,
+    handleSelectAll,
     isCopyMode: () => isCopyMode,
     isFocusingRef,
     handleScrollOrHistory,

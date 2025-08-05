@@ -6,6 +6,7 @@ type Handlers = {
   handleCopyToggle: (clientX: number, clientY: number) => void;
   handleCancel: () => void;
   handleCopyAdjust: (direction: 'left' | 'right') => void;
+  handleSelectAll: () => void;
   isCopyMode: () => boolean;
   isFocusingRef: React.MutableRefObject<boolean>;
   handleScrollOrHistory: (key: string, stepY: number) => boolean;
@@ -60,11 +61,14 @@ export function useVirtualEvents(
       }
 
       // コピー選択モード中の範囲調整やコピー(Ctrl+C)
-      if (handlers.isCopyMode() && (e.key === 'h' || e.key === 'l' || (e.ctrlKey && e.key.toLowerCase() === 'c'))) {
+      if (handlers.isCopyMode() && (e.key === 'h' || e.key === 'l' || (e.ctrlKey && e.key.toLowerCase() === 'a') || (e.ctrlKey && e.key.toLowerCase() === 'c'))) {
         if (e.key === 'l') {
           handlers.handleCopyAdjust('right');
         } else if (e.key === 'h') {
           handlers.handleCopyAdjust('left');
+        }
+        if (e.ctrlKey && e.key.toLowerCase() === 'a') {
+          handlers.handleSelectAll();
         }
         if (e.ctrlKey && e.key.toLowerCase() === 'c') {
           document.execCommand('copy'); // クリップボードコピー実行
