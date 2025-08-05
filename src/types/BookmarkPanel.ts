@@ -14,6 +14,7 @@ export type PanelState = {
   topBookmarks: Bookmark[];
   selectedIndex: number;
   tabCount: number;
+  tabPressedCount: number;
 };
 
 // useReducer用アクション型定義
@@ -25,9 +26,5 @@ export type PanelAction =
   | { type: "SET_TOP_BOOKMARKS"; payload: Bookmark[] }
   | { type: "SET_SELECTED_INDEX"; payload: number }
   | { type: "SET_TAB_COUNT"; payload: number }
-  | { type: "CLOSE_PANEL" };
-
-// chrome.runtime.onMessageの型定義
-export type RuntimeMessage = {
-  action: "toggleBookmarkManager" | "getBookmarks";
-};
+  | { type: "CLOSE_PANEL" }
+  | { type: "SET_TAB_PRESSED_COUNT"; payload: number };
