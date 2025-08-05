@@ -9,9 +9,10 @@ export const initialState: PanelState = {
   topBookmarks: [],
   selectedIndex: 0,
   tabCount: 0,
+  tabPressedCount: 0,
 };
 
-// useReducerのreducer関数
+// useReducerの// reducer関数
 export const reducer = (state: PanelState, action: PanelAction): PanelState => {
   switch (action.type) {
 	case "TOGGLE_PANEL":
@@ -30,6 +31,8 @@ export const reducer = (state: PanelState, action: PanelAction): PanelState => {
 	  return { ...state, tabCount: action.payload };
 	case "CLOSE_PANEL":
 	  return { ...state, showBookmarkManager: false };
+	case "SET_TAB_PRESSED_COUNT":
+	  return { ...state, tabPressedCount: action.payload };
 	default:
 	  return state;
   }
