@@ -106,19 +106,37 @@ const BookmarkPanel = () => {
     });
   }, [state.selectedIndex]);
 
+  // 共通テキスト算出関数
+  const getCommonPrefix = (arr: string[]): string => {
+    if (arr.length === 0) return "";
+    let prefix = arr[0];
+    for (let i = 1; i < arr.length; i++) {
+      let j = 0;
+      while (j < prefix.length && j < arr[i].length && prefix[j] === arr[i][j]) {
+        j++;
+      }
+      prefix = prefix.slice(0, j);
+      if (prefix === "") break;
+    }
+    return prefix;
+  };
+
+  // Tab/Shift+Tabインデックス管理
+  const [tabIndex, setTabIndex] = useState<number | null>(null);
+
   // フィルタ処理
   const handleInputChange = (val: string) => {
     dispatch({ type: "SET_INPUT", payload: val });
     dispatch({ type: "SET_TAB_COUNT", payload: 0 });
     dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 0 });
-
+    setTabIndex(null);
 
     if (val === "") {
       dispatch({ type: "SET_FILTERED", payload: state.topBookmarks });
     } else {
       const matches = state.bookmarks.filter((b) =>
         b.title.toLowerCase().startsWith(val.toLowerCase())
-      );
+      ).slice(0, 5);
       dispatch({ type: "SET_FILTERED", payload: matches });
       dispatch({ type: "SET_SELECTED_INDEX", payload: 0 });
     }
@@ -157,13 +175,14 @@ const BookmarkPanel = () => {
                 e.preventDefault();
                 const nextIndex = (state.selectedIndex + 1) % state.filtered.length;
                 dispatch({ type: "SET_SELECTED_INDEX", payload: nextIndex });
-                dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 0 }); // tab状態リセット
+                dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 0 });
+                setTabIndex(null);
               } else if (e.key === "ArrowUp" || (e.altKey && e.key === 'k')) {
                 e.preventDefault();
-                const prevIndex =
-                  (state.selectedIndex - 1 + state.filtered.length) % state.filtered.length;
+                const prevIndex = (state.selectedIndex - 1 + state.filtered.length) % state.filtered.length;
                 dispatch({ type: "SET_SELECTED_INDEX", payload: prevIndex });
-                dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 0 }); // tab状態リセット
+                dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 0 });
+                setTabIndex(null);
               } else if (e.key === "Enter") {
                 e.preventDefault();
                 const selectedBookmark = state.filtered[state.selectedIndex];
@@ -174,20 +193,40 @@ const BookmarkPanel = () => {
                   window.open(`https://www.google.com/search?q=${query}`, "_blank");
                 }
                 dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 0 });
+                setTabIndex(null);
               } else if (e.key === "Tab") {
                 e.preventDefault();
-                if (state.tabPressedCount === 0 && state.filtered.length > 0) {
-                  const top = state.filtered[0];
-                  dispatch({ type: "SET_INPUT", payload: top.title });
-                  dispatch({ type: "SET_SELECTED_INDEX", payload: 0 });
-                  dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 1 });
+                const filteredTitles = state.filtered.map(b => b.title);
+                if (state.filtered.length === 0) return;
+                if (!e.shiftKey) {
+                  // Tab
+                  if (tabIndex === null) {
+                    // 1回目は共通prefix
+                    const common = getCommonPrefix(filteredTitles);
+                    dispatch({ type: "SET_INPUT", payload: common });
+                    dispatch({ type: "SET_SELECTED_INDEX", payload: 0 });
+                    setTabIndex(0);
+                  } else {
+                    // 2回目以降はindexを進める
+                    const nextIdx = (tabIndex + 1) % state.filtered.length;
+                    dispatch({ type: "SET_INPUT", payload: filteredTitles[nextIdx] });
+                    dispatch({ type: "SET_SELECTED_INDEX", payload: nextIdx });
+                    setTabIndex(nextIdx);
+                  }
                 } else {
-                  const matches = state.bookmarks.filter((b) =>
-                    b.title.toLowerCase().includes(state.input.toLowerCase())
-                  );
-                  dispatch({ type: "SET_FILTERED", payload: matches });
-                  dispatch({ type: "SET_SELECTED_INDEX", payload: 0 });
-                  dispatch({ type: "SET_TAB_PRESSED_COUNT", payload: 2 });
+                  // Shift+Tab
+                  if (tabIndex === null) {
+                    // Tab1回目のあとにShift+Tabの場合はfiltered[0]を表示
+                    dispatch({ type: "SET_INPUT", payload: filteredTitles[0] });
+                    dispatch({ type: "SET_SELECTED_INDEX", payload: 0 });
+                    setTabIndex(0);
+                  } else {
+                    // indexを戻す
+                    const prevIdx = (tabIndex - 1 + state.filtered.length) % state.filtered.length;
+                    dispatch({ type: "SET_INPUT", payload: filteredTitles[prevIdx] });
+                    dispatch({ type: "SET_SELECTED_INDEX", payload: prevIdx });
+                    setTabIndex(prevIdx);
+                  }
                 }
               }
             }}
@@ -205,6 +244,7 @@ const BookmarkPanel = () => {
               marginBottom: "1rem",
               backgroundColor: themeColors.panelBg,
               color: themeColors.panelText,
+              lineHeight: '1rem',
             }}
             onFocus={(e) => {
               e.currentTarget.style.borderColor = themeColors.inputFocusBorder;
