@@ -206,12 +206,17 @@ const BookmarkPanel = () => {
                     dispatch({ type: "SET_INPUT", payload: common });
                     dispatch({ type: "SET_SELECTED_INDEX", payload: 0 });
                     setTabIndex(0);
+                  } else if (tabIndex === 0) {
+                    // 2回目もfiltered[0]
+                    dispatch({ type: "SET_INPUT", payload: filteredTitles[0] });
+                    dispatch({ type: "SET_SELECTED_INDEX", payload: 0 });
+                    setTabIndex(1); // 次は1に進める
                   } else {
-                    // 2回目以降はindexを進める
-                    const nextIdx = (tabIndex + 1) % state.filtered.length;
+                    // 3回目以降はindexを進める
+                    const nextIdx = (tabIndex) % state.filtered.length;
                     dispatch({ type: "SET_INPUT", payload: filteredTitles[nextIdx] });
                     dispatch({ type: "SET_SELECTED_INDEX", payload: nextIdx });
-                    setTabIndex(nextIdx);
+                    setTabIndex(tabIndex + 1);
                   }
                 } else {
                   // Shift+Tab
