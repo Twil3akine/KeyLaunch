@@ -10,6 +10,34 @@ type Props = {
 };
 
 const VirtualPointer: React.FC<Props> = ({ isShowBookmarkPanel }) => {
+  // Ctrl+Space+Altで仮想ポインタ直下のリンクを新しいタブで開く
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.altKey && e.code === 'Space') {
+        // 仮想ポインタの中心座標を取得
+        const pointer = pointerRef.current;
+        if (!pointer) return;
+        const rect = pointer.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        // その座標にある要素を取得
+        const el = document.elementFromPoint(centerX, centerY);
+        // aタグを探す（親方向へも探索）
+        let link: HTMLElement | null = el as HTMLElement;
+        while (link && link.tagName !== 'A') {
+          link = link.parentElement;
+        }
+        if (link && link.tagName === 'A') {
+          const href = (link as HTMLAnchorElement).href;
+          if (href) {
+            window.open(href, '_blank');
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
   const pointerRef = useRef<HTMLDivElement>(null);
   const { position, isFocusing, isCopyMode, startFocus, cancelFocus } = useVirtualPointer({ pointerSize, margin });
     /**   現状は必要ない（現在の設計では使ってない）が、
