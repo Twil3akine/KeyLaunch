@@ -3,7 +3,7 @@
   "name": "Keyboard Cursor Extension",
   "version": "1.0",
   "description": "Control a virtual cursor with the keyboard",
-  "permissions": ["tabs", "scripting", "activeTab", "bookmarks"],
+  "permissions": ["tabs", "scripting", "activeTab", "bookmarks", "downloads"],
   "background": {
     "service_worker": "background.js"
   },

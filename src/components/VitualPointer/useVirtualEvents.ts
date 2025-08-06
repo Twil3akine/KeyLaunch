@@ -9,6 +9,7 @@ type Handlers = {
   handleSelectAll: () => void;
   isCopyMode: () => boolean;
   isFocusingRef: React.MutableRefObject<boolean>;
+  handleSaveAs: (clientX: number, clientY: number) => void;
   handleScrollOrHistory: (key: string, stepY: number) => boolean;
   handleClickFocus: (clientX: number, clientY: number) => void;
   handleDoubleClick: (clientX: number, clientY: number) => void;
@@ -43,6 +44,9 @@ export function useVirtualEvents(
       const stepY = e.shiftKey ? window.innerHeight / 50 : window.innerHeight / 20;
       const clientX = positionRef.current.x + pointerSize / 2;
       const clientY = positionRef.current.y + pointerSize / 2;
+      
+
+
 
       // Alt+C: コピー選択開始
       if (e.altKey && e.key.toLowerCase() === 'c') {
@@ -80,6 +84,14 @@ export function useVirtualEvents(
 
       // フォーカス中は他操作を無効化
       if (handlers.isFocusingRef.current) {
+        return;
+      }
+
+      // Alt+Q: 画像やリンク先を名前を付けて保存（一時的にAlt+Qにしています。Alt+Nは何かデフォルトのものと競合していたのかできませんでした）
+      if (e.altKey && e.key.toLowerCase() === 'q') {
+        e.preventDefault();
+        e.stopPropagation();
+        handlers.handleSaveAs(clientX, clientY);
         return;
       }
 
