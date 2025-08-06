@@ -25,6 +25,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
     });
   }
+
+  if (message.action === 'download' && message.url) {
+    chrome.downloads.download({
+      url: message.url,
+      filename: message.filename || 'download.bin',
+      saveAs: true,
+    }, (downloadId) => {
+      if (chrome.runtime.lastError) {
+        sendResponse({ success: false, error: chrome.runtime.lastError.message });
+      } else {
+        sendResponse({ success: true, downloadId });
+      }
+    });
+    return true;
+  }
+
 });
 
 chrome.commands.onCommand.addListener((command) => {
@@ -42,3 +58,4 @@ chrome.commands.onCommand.addListener((command) => {
     });
   }
 });
+
